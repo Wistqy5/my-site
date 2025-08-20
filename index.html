@@ -159,7 +159,7 @@
       const user = snap.val();
       if (user.password !== pass) return alert("Неверный пароль");
 
-      localStorage.setItem("user", JSON.stringify({ nick, level: user.level || 1, role: user.role || "Researcher" }));
+      localStorage.setItem("user", JSON.stringify({ nick, level: user.level || 0, role: user.role || "Class-D" }));
       window.location.href = "home.html";
     };
 
