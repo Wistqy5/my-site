@@ -173,7 +173,7 @@
       const exists = (await get(path)).exists();
       if (exists) return alert("Такой ник уже занят");
 
-      const newUser = { password: pass, level: 1, role: "Researcher", createdAt: Date.now() };
+      const newUser = { password: pass, level: 0, role: "Researcher", createdAt: Date.now() };
       await set(path, newUser);
       localStorage.setItem("user", JSON.stringify({ nick, level: 1, role: "Researcher" }));
       window.location.href = "home.html";
