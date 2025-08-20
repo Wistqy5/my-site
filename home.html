@@ -5,40 +5,74 @@
   <title>SCP Foundation DB - Главная</title>
   <style>
     body { background:#111; color:#eee; font-family:Arial; display:flex; margin:0; }
-    #sidebar { width:250px; background:#1a1a1a; padding:15px; min-height:100vh; }
+    #sidebar { width:280px; background:#1a1a1a; padding:15px; min-height:100vh; }
     #content { flex:1; padding:20px; text-align:left; }
     .scp-entry { display:block; margin:3px 0; color:#4da6ff; text-decoration:none; }
     .scp-entry:hover { text-decoration:underline; }
-    input { width:90%; margin-bottom:10px; padding:6px; border-radius:4px; border:none; }
-    button { background:#222; color:white; border:none; padding:6px 10px; border-radius:5px; cursor:pointer; }
+    input,button,select,textarea { margin:5px 0; padding:6px; border:none; border-radius:4px; }
+    button { background:#222; color:white; cursor:pointer; }
     button:hover { background:#444; }
-    #createBtn { position:fixed; bottom:20px; right:20px; padding:10px 15px; border-radius:50%; }
+    #createBtn { position:fixed; bottom:20px; right:20px; padding:10px 15px; border-radius:50%; width:48px; height:48px; font-size:22px; line-height:26px; }
     #header { display:flex; align-items:center; margin-bottom:20px; }
     #header img { width:40px; height:40px; margin-right:10px; }
+    #userMgmt { margin-top:25px; background:#1a1a1a; padding:12px; border-radius:8px; display:none; }
+    #userMgmt h3 { margin:0 0 10px 0; }
+    small.muted { color:#aaa; display:block; margin-top:4px; }
   </style>
 </head>
 <body>
   <div id="sidebar">
-    <h3>Поиск SCP</h3>
+    <h3>🔎 Поиск SCP</h3>
     <input type="text" id="search" placeholder="Поиск...">
     <div id="entries"></div>
   </div>
 
   <div id="content">
     <div id="header">
-      <img src="scp_logo.png" alt="SCP Logo"> <!-- сюда картинку -->
+      <!-- Положи свою картинку рядом с файлом: scp_logo.png или images/scp_logo.png -->
+      <img src="scp_logo.png" alt="SCP Logo" onerror="this.style.display='none'">
       <h1>SCP Foundation</h1>
     </div>
-    <p>Добро пожаловать, <span id="userNick"></span></p>
-    <p>Ваш уровень допуска: <span id="userLevel"></span></p>
+
+    <p>Добро пожаловать, <b id="userNick"></b></p>
+    <p>Ваш уровень: <b id="userLevel"></b> | Роль: <b id="userRole"></b></p>
     <button onclick="logout()">Выход</button>
+
+    <!-- Панель управления пользователями (видна только Level >= 4) -->
+    <div id="userMgmt">
+      <h3>Управление пользователями</h3>
+      <label>Ник пользователя</label>
+      <input type="text" id="mgmtNick" placeholder="например: bright">
+
+      <label>Новая роль</label>
+      <select id="newRole">
+        <option>Персонал D</option>
+        <option>Охрана</option>
+        <option>Исследователь</option>
+        <option>Администратор</option>
+        <option>O5</option>
+      </select>
+
+      <label>Новый уровень</label>
+      <select id="newLevel">
+        <option value="1">Level 1</option>
+        <option value="2">Level 2</option>
+        <option value="3">Level 3</option>
+        <option value="4">Level 4</option>
+        <option value="5">Level 5</option>
+      </select>
+
+      <button id="applyBtn">Применить</button>
+      <small class="muted">Правила: Level 4 не может менять пользователей с уровнем ≥ 4 и не может назначать Level 5.</small>
+      <div id="mgmtMsg"></div>
+    </div>
   </div>
 
-  <button id="createBtn" onclick="createSCP()">+</button>
+  <button id="createBtn" title="Создать SCP" onclick="createSCP()">+</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getDatabase, ref, get, child, push, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    import { getDatabase, ref, get, push, set, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
@@ -54,11 +88,33 @@
     const db = getDatabase(app);
 
     const nick = localStorage.getItem("nick");
-    const userLevel = parseInt(localStorage.getItem("level") || 1);
+    const userLevel = Number(localStorage.getItem("level") || 1);
+    const userRole  = localStorage.getItem("role") || "Исследователь";
     if (!nick) window.location.href = "index.html";
 
     document.getElementById("userNick").innerText = nick;
     document.getElementById("userLevel").innerText = userLevel;
+    document.getElementById("userRole").innerText  = userRole;
+
+    // показать панель управления только Level >= 4
+    if (userLevel >= 4) {
+      document.getElementById("userMgmt").style.display = "block";
+    }
+
+    function roleDefaultLevel(role){
+      switch(role){
+        case "O5": return 5;
+        case "Администратор": return 4;
+        case "Исследователь": return 3;
+        case "Охрана": return 2;
+        default: return 1; // Персонал D
+      }
+    }
+
+    // при смене роли — подставляем дефолтный уровень (можно потом изменить вручную)
+    document.getElementById("newRole").addEventListener("change", (e)=>{
+      document.getElementById("newLevel").value = String(roleDefaultLevel(e.target.value));
+    });
 
     async function loadEntries() {
       const snap = await get(ref(db, "scp"));
@@ -75,19 +131,22 @@
         const link = document.createElement("a");
         link.href = `scp.html?id=${child.key}`;
         link.className = "scp-entry";
-        link.innerText = `${data.title}`;
+        link.innerText = data.title;  // например: "SCP-001"
         entriesDiv.appendChild(link);
       });
     }
 
     function createSCP() {
       const title = prompt("Введите название SCP (например SCP-001):");
-      const text = prompt("Введите текст SCP:");
-      const level = parseInt(prompt("Минимальный уровень (1-5):")) || 1;
+      if (!title) return;
+      const text = prompt("Введите текст SCP:") || "";
+      const level = Number(prompt("Минимальный уровень (1-5):") || 1);
 
       const scpRef = push(ref(db, "scp"));
       set(scpRef, { title, text, requiredLevel: level, author: nick }).then(() => {
         loadEntries();
+        // можно сразу перейти к записи:
+        // window.location.href = `scp.html?id=${scpRef.key}`;
       });
     }
 
@@ -96,11 +155,50 @@
       window.location.href = "index.html";
     }
 
+    // Поиск по списку
     document.getElementById("search").addEventListener("input", e => {
       const q = e.target.value.toLowerCase();
       document.querySelectorAll(".scp-entry").forEach(el => {
         el.style.display = el.innerText.toLowerCase().includes(q) ? "block" : "none";
       });
+    });
+
+    // Применить изменения по пользователю (Level >= 4)
+    document.getElementById("applyBtn").addEventListener("click", async ()=>{
+      if (userLevel < 4) return alert("Недостаточно прав");
+
+      const tNick = document.getElementById("mgmtNick").value.trim();
+      const nRole = document.getElementById("newRole").value;
+      const nLevel = Number(document.getElementById("newLevel").value);
+      const msgBox = document.getElementById("mgmtMsg");
+
+      msgBox.innerText = "";
+
+      if (!tNick) { alert("Укажите ник"); return; }
+
+      const snap = await get(ref(db, "users/" + tNick));
+      if (!snap.exists()) { alert("Пользователь не найден"); return; }
+      const target = snap.val();
+      const targetLevel = Number(target.level || 1);
+
+      // Правила ограничений для Level 4
+      if (userLevel === 4) {
+        if (targetLevel >= 4) { alert("Нельзя менять пользователей с уровнем ≥ 4"); return; }
+        if (nLevel > 4) { alert("Нельзя назначать уровень выше 4"); return; }
+      }
+
+      await update(ref(db, "users/" + tNick), { level: nLevel, role: nRole });
+
+      // если меняем сами себе — синхронизируем localStorage и UI
+      if (tNick === nick) {
+        localStorage.setItem("level", String(nLevel));
+        localStorage.setItem("role", nRole);
+        document.getElementById("userLevel").innerText = nLevel;
+        document.getElementById("userRole").innerText  = nRole;
+      }
+
+      msgBox.style.color = "#7CFC00";
+      msgBox.innerText = `✅ Обновлено: ${tNick} → ${nRole} (Level ${nLevel})`;
     });
 
     loadEntries();
