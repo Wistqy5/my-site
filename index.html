@@ -27,8 +27,14 @@
   <!-- 👤 Инфо -->
   <div id="userInfo" style="margin-top:20px;"></div>
 
+  <!-- 🔎 Поиск -->
+  <input type="text" id="searchInput" placeholder="Поиск SCP..." oninput="loadEntries()" style="margin:10px;padding:5px;width:200px;">
+
+  <!-- 📝 Кнопка создания SCP -->
+  <button id="createSCPbtn" onclick="showForm()" style="display:none;position:fixed;bottom:20px;right:20px;padding:10px 15px;border-radius:50%;background:#333;">+</button>
+
   <!-- 📝 Создание SCP -->
-  <div id="scpForm" style="display:none;">
+  <div id="scpForm" style="display:none;position:fixed;top:20%;left:50%;transform:translateX(-50%);background:#1a1a1a;padding:15px;border-radius:10px;">
     <h2>Создать SCP-запись</h2>
     <input type="text" id="scpTitle" placeholder="Название SCP"><br>
     <textarea id="scpText" placeholder="Описание SCP"></textarea><br>
@@ -41,137 +47,135 @@
       <option value="5">Level 5</option>
     </select><br>
     <button onclick="createSCP()">Создать SCP</button>
+    <button onclick="hideForm()">Отмена</button>
   </div>
 
   <!-- 📚 Список SCP -->
-  <div id="entries"></div>
-
-  <!-- 📖 Открытая SCP запись -->
-  <div id="scpPage" style="display:none;">
-    <h2 id="scpTitlePage"></h2>
-    <div id="scpContent"></div>
-    <textarea id="editText" style="width:80%;height:150px;display:none;"></textarea><br>
-    <button id="saveEditBtn" onclick="saveEdit()" style="display:none;">Сохранить</button><br>
-    <button onclick="closeSCP()">Назад</button>
-  </div>
+  <div id="entries" style="text-align:left;max-width:300px;margin:20px auto;"></div>
 
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-  import { getDatabase, ref, set, get, child, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, set, get, child, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-  // 🔑 Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
-    authDomain: "scp-foundation-45b20.firebaseapp.com",
-    databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com",
-    projectId: "scp-foundation-45b20",
-    storageBucket: "scp-foundation-45b20.appspot.com",
-    messagingSenderId: "383272466518",
-    appId: "1:383272466518:web:3225b8911a56c9d769e3f7"
-  };
+    // 🔑 Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
+      authDomain: "scp-foundation-45b20.firebaseapp.com",
+      databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com",
+      projectId: "scp-foundation-45b20",
+      storageBucket: "scp-foundation-45b20.appspot.com",
+      messagingSenderId: "383272466518",
+      appId: "1:383272466518:web:3225b8911a56c9d769e3f7"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-  let currentUser = null;
-  let userLevel = 0;
+    let currentUser = null;
+    let userLevel = 0;
 
-  // ---------- Регистрация ----------
-  async function register() {
-    const nick = document.getElementById("nick").value;
-    const password = document.getElementById("password").value;
-    if (!nick || !password) { alert("Введите ник и пароль!"); return; }
+    // ---------- Регистрация ----------
+    async function register() {
+      const nick = document.getElementById("nick").value;
+      const password = document.getElementById("password").value;
+      if (!nick || !password) { alert("Введите ник и пароль!"); return; }
 
-    await set(ref(db, "users/" + nick), {
-      password: password,
-      level: 1
-    });
+      await set(ref(db, "users/" + nick), {
+        password: password,
+        level: 1
+      });
 
-    alert("Пользователь зарегистрирован!");
-  }
-
-  // ---------- Вход ----------
-  async function login() {
-    const nick = document.getElementById("nick").value;
-    const password = document.getElementById("password").value;
-    const snap = await get(child(ref(db), "users/" + nick));
-    if (!snap.exists()) { alert("Нет такого пользователя!"); return; }
-
-    const data = snap.val();
-    if (data.password !== password) { alert("Неверный пароль!"); return; }
-
-    currentUser = { nick, level: data.level || 1 };
-    userLevel = currentUser.level;
-
-    // сохраняем в localStorage для scp.html
-    localStorage.setItem("currentUser", JSON.stringify(currentUser));
-
-    document.getElementById("authSection").style.display = "none";
-    document.getElementById("logoutBtn").style.display = "inline";
-    document.getElementById("userInfo").innerText = `Добро пожаловать, ${nick}! Ваш уровень: ${userLevel}`;
-
-    if (userLevel >= 2) document.getElementById("scpForm").style.display = "block";
-
-    loadEntries();
-  }
-
-  // ---------- Выход ----------
-  function logout() {
-    currentUser = null;
-    userLevel = 0;
-    localStorage.removeItem("currentUser");
-    document.getElementById("authSection").style.display = "block";
-    document.getElementById("logoutBtn").style.display = "none";
-    document.getElementById("scpForm").style.display = "none";
-    document.getElementById("entries").innerHTML = "";
-    document.getElementById("userInfo").innerText = "";
-  }
-
-  // ---------- Создание SCP ----------
-  async function createSCP() {
-    const title = document.getElementById("scpTitle").value;
-    const text = document.getElementById("scpText").value;
-    const level = parseInt(document.getElementById("scpLevel").value);
-
-    const scpRef = push(ref(db, "scp"));
-    await set(scpRef, {
-      title, text,
-      requiredLevel: level,
-      author: currentUser.nick
-    });
-
-    alert("SCP создан!");
-    loadEntries();
-  }
-
-  // ---------- Список SCP ----------
-  async function loadEntries() {
-    const snap = await get(ref(db, "scp"));
-    const entriesDiv = document.getElementById("entries");
-    entriesDiv.innerHTML = "";
-
-    if (!snap.exists()) {
-      entriesDiv.innerHTML = "Нет SCP записей";
-      return;
+      alert("Пользователь зарегистрирован!");
     }
 
-    snap.forEach(child => {
-      const data = child.val();
-      const link = document.createElement("a");
-      link.href = `scp.html?id=${child.key}`;
-      link.style.display = "block";
-      link.className = "scp-entry";
-      link.innerText = `${data.title} (Level ${data.requiredLevel})`;
-      entriesDiv.appendChild(link);
-    });
-  }
+    // ---------- Вход ----------
+    async function login() {
+      const nick = document.getElementById("nick").value;
+      const password = document.getElementById("password").value;
+      const snap = await get(child(ref(db), "users/" + nick));
+      if (!snap.exists()) { alert("Нет такого пользователя!"); return; }
 
-  // глобал
-  window.register = register;
-  window.login = login;
-  window.logout = logout;
-  window.createSCP = createSCP;
-</script>
+      const data = snap.val();
+      if (data.password !== password) { alert("Неверный пароль!"); return; }
 
+      currentUser = { nick, level: data.level || 1 };
+      userLevel = currentUser.level;
+      localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
+      document.getElementById("authSection").style.display = "none";
+      document.getElementById("logoutBtn").style.display = "inline";
+      document.getElementById("userInfo").innerText = `Добро пожаловать, ${nick}! Ваш уровень: ${userLevel}`;
+
+      if (userLevel >= 2) document.getElementById("createSCPbtn").style.display = "block";
+
+      loadEntries();
+    }
+
+    // ---------- Выход ----------
+    function logout() {
+      currentUser = null;
+      userLevel = 0;
+      localStorage.removeItem("currentUser");
+      document.getElementById("authSection").style.display = "block";
+      document.getElementById("logoutBtn").style.display = "none";
+      document.getElementById("createSCPbtn").style.display = "none";
+      document.getElementById("entries").innerHTML = "";
+      document.getElementById("userInfo").innerText = "";
+    }
+
+    // ---------- Создание SCP ----------
+    async function createSCP() {
+      const title = document.getElementById("scpTitle").value;
+      const text = document.getElementById("scpText").value;
+      const level = parseInt(document.getElementById("scpLevel").value);
+
+      const scpRef = push(ref(db, "scp"));
+      await set(scpRef, {
+        title, text,
+        requiredLevel: level,
+        author: currentUser.nick
+      });
+
+      hideForm();
+      loadEntries();
+    }
+
+    function showForm() { document.getElementById("scpForm").style.display = "block"; }
+    function hideForm() { document.getElementById("scpForm").style.display = "none"; }
+
+    // ---------- Список SCP + поиск ----------
+    async function loadEntries() {
+      const snap = await get(ref(db, "scp"));
+      const entriesDiv = document.getElementById("entries");
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      entriesDiv.innerHTML = "";
+
+      if (!snap.exists()) {
+        entriesDiv.innerHTML = "Нет SCP записей";
+        return;
+      }
+
+      snap.forEach(child => {
+        const data = child.val();
+        if (search && !data.title.toLowerCase().includes(search)) return;
+
+        const link = document.createElement("a");
+        link.href = `scp.html?id=${child.key}`;
+        link.style.display = "block";
+        link.className = "scp-entry";
+        link.innerText = `${data.title} (Level ${data.requiredLevel})`;
+        entriesDiv.appendChild(link);
+      });
+    }
+
+    // глобал
+    window.register = register;
+    window.login = login;
+    window.logout = logout;
+    window.createSCP = createSCP;
+    window.showForm = showForm;
+    window.hideForm = hideForm;
+    window.loadEntries = loadEntries;
+  </script>
 </body>
 </html>
