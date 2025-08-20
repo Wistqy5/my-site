@@ -1,106 +1,124 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Вход | SCP Foundation</title>
   <style>
-    body {
-      background: #111;
-      color: white;
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    #loginBox {
-      background: #1a1a1a;
-      padding: 20px;
-      border-radius: 10px;
-      width: 300px;
-      text-align: center;
-    }
-    input, button {
-      width: 90%;
-      padding: 8px;
-      margin: 6px 0;
-      border: none;
-      border-radius: 6px;
-    }
-    button {
-      cursor: pointer;
-      background: #444;
-      color: white;
-    }
-    button:hover {
-      background: #666;
-    }
+    body { background:#0d0d0d; color:#eee; font-family:Segoe UI, Arial, sans-serif;
+           display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+    .box { width:340px; background:#1a1a1a; border-radius:14px; padding:22px;
+           box-shadow:0 8px 24px rgba(0,0,0,.45); }
+    h2 { margin:0 0 10px; font-weight:600; }
+    .muted { color:#aaa; font-size:13px; margin-bottom:10px; }
+    label { font-size:13px; color:#bbb; }
+    input { width:100%; padding:10px; margin:6px 0 12px; border:1px solid #333; border-radius:10px;
+            background:#111; color:#eee; }
+    button { width:100%; padding:10px; border:0; border-radius:10px; cursor:pointer; font-weight:600;
+             background:#c62828; color:#fff; }
+    button:hover { background:#e53935; }
+    .ghost { background:#444; margin-top:8px; }
+    .ghost:hover { background:#666; }
+    .tabs { display:flex; gap:8px; margin-bottom:10px; }
+    .tab { flex:1; padding:8px; text-align:center; border-radius:10px; background:#222; cursor:pointer; }
+    .tab.active { background:#c62828; }
+    #logo { width:28px; height:28px; vertical-align:-6px; border-radius:0; margin-right:8px; }
+    .hidden { display:none; }
   </style>
 </head>
 <body>
-  <div id="loginBox">
-    <h2>🔒 SCP Foundation</h2>
-    <input type="text" id="nick" placeholder="Ник"><br>
-    <input type="password" id="password" placeholder="Пароль"><br>
-    <button onclick="login()">Войти</button>
+  <div class="box">
+    <h2><img id="logo" src="logo.png" alt="">SCP Foundation</h2>
+    <div class="muted">Доступ только для авторизованного персонала.</div>
+
+    <div class="tabs">
+      <div id="tab-login" class="tab active" onclick="switchTab('login')">Войти</div>
+      <div id="tab-reg" class="tab" onclick="switchTab('reg')">Регистрация</div>
+    </div>
+
+    <!-- Вход -->
+    <div id="form-login">
+      <label>Ник</label>
+      <input id="loginNick" type="text" placeholder="Ник">
+      <label>Пароль</label>
+      <input id="loginPass" type="password" placeholder="Пароль">
+      <button onclick="login()">Войти</button>
+    </div>
+
+    <!-- Регистрация -->
+    <div id="form-reg" class="hidden">
+      <label>Ник</label>
+      <input id="regNick" type="text" placeholder="Придумайте ник">
+      <label>Пароль</label>
+      <input id="regPass" type="password" placeholder="Минимум 4 символа">
+      <button onclick="register()">Зарегистрироваться</button>
+      <div class="muted" style="margin-top:8px;">
+        Будут назначены: уровень 1, роль Researcher.
+      </div>
+    </div>
+
+    <button class="ghost" onclick="prefill()">Заполнить демо-данные</button>
   </div>
 
   <script type="module">
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-    // 🔧 Настройки Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
       authDomain: "scp-foundation-45b20.firebaseapp.com",
       databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com/",
       projectId: "scp-foundation-45b20",
-      storageBucket: "scp-foundation-45b20.firebasestorage.app",
+      storageBucket: "scp-foundation-45b20.appspot.com",
       messagingSenderId: "383272466518",
-      appId: "1:383272466518:web:3225b8911a56c9d769e3f7",
-      measurementId: "G-G84NR3K9G2"
+      appId: "1:383272466518:web:3225b8911a56c9d769e3f7"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    async function login() {
-      const nick = document.getElementById("nick").value.trim();
-      const password = document.getElementById("password").value.trim();
+    window.switchTab = (name) => {
+      document.getElementById('form-login').classList.toggle('hidden', name !== 'login');
+      document.getElementById('form-reg').classList.toggle('hidden', name !== 'reg');
+      document.getElementById('tab-login').classList.toggle('active', name === 'login');
+      document.getElementById('tab-reg').classList.toggle('active', name === 'reg');
+    };
 
-      if (!nick || !password) {
-        alert("Введите ник и пароль!");
-        return;
-      }
+    window.prefill = () => {
+      document.getElementById('loginNick').value = "demo";
+      document.getElementById('loginPass').value = "demo";
+      document.getElementById('regNick').value = "demo";
+      document.getElementById('regPass').value = "demo";
+    };
 
-      try {
-        const snap = await get(ref(db, "users/" + nick));
-        if (!snap.exists()) {
-          alert("Нет такого пользователя!");
-          return;
-        }
+    window.login = async () => {
+      const nick = document.getElementById("loginNick").value.trim();
+      const pass = document.getElementById("loginPass").value.trim();
+      if (!nick || !pass) return alert("Введите ник и пароль");
 
-        const data = snap.val();
-        if (data.password !== password) {
-          alert("Неверный пароль!");
-          return;
-        }
+      const snap = await get(ref(db, "users/" + nick));
+      if (!snap.exists()) return alert("Нет такого пользователя");
+      const user = snap.val();
+      if (user.password !== pass) return alert("Неверный пароль");
 
-        // ✅ Сохраняем пользователя в localStorage
-        localStorage.setItem("user", JSON.stringify({
-          nick: nick,
-          level: data.level || 1,
-          role: data.role || "Researcher"
-        }));
+      localStorage.setItem("user", JSON.stringify({ nick, level: user.level || 1, role: user.role || "Researcher" }));
+      window.location.href = "home.html";
+    };
 
-        window.location.href = "home.html";
-      } catch (err) {
-        console.error(err);
-        alert("Ошибка подключения к базе!");
-      }
-    }
+    window.register = async () => {
+      const nick = document.getElementById("regNick").value.trim();
+      const pass = document.getElementById("regPass").value.trim();
+      if (nick.length < 3) return alert("Ник минимум 3 символа");
+      if (pass.length < 4) return alert("Пароль минимум 4 символа");
 
-    window.login = login;
+      const path = ref(db, "users/" + nick);
+      const exists = (await get(path)).exists();
+      if (exists) return alert("Такой ник уже занят");
+
+      const newUser = { password: pass, level: 1, role: "Researcher", createdAt: Date.now() };
+      await set(path, newUser);
+      localStorage.setItem("user", JSON.stringify({ nick, level: 1, role: "Researcher" }));
+      window.location.href = "home.html";
+    };
   </script>
 </body>
 </html>
