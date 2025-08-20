@@ -41,13 +41,16 @@
       <select id="newLevel">
         <option value="none">Level none</option>
         <option value="0">Level 0</option>
-        <option value="1">Level 1</option><option value="2">Level 2</option>
-        <option value="3">Level 3</option><option value="4">Level 4</option><option value="5">Level 5</option>
+        <option value="1">Level 1</option>
+        <option value="2">Level 2</option>
+        <option value="3">Level 3</option>
+        <option value="4">Level 4</option>
+        <option value="5">Level 5</option>
         <option value="6">Level Omni</option>
         <option value="7">Level Omni+</option>
       </select>
       <label>Роль:</label>
-      <select id="newRole">
+      <select id="newRole" onchange="toggleUnit()">
         <option value="Class-D">Class-D</option>
         <option value="Researcher">Researcher</option>
         <option value="Security Department">Security Department</option>
@@ -57,14 +60,16 @@
         <option value="The Administrator">The Administrator</option>
         <option value="Office of The Administrator">Office of The Administrator</option>
       </select>
-      <label>Подразделение (только для MTF):</label>
-      <select id="newUnit">
-        <option value="">—</option>
-        <option value="Alpha-1">Альфа-1</option>
-        <option value="Beta-7">Бета-7</option>
-        <option value="Epsilon-11">Епсилон-11</option>
-        <option value="Tau-5">Таупа-5</option>
-      </select>
+      <div id="unitDiv" style="display:none;">
+        <label>Подразделение (только для MTF):</label>
+        <select id="newUnit">
+          <option value="">—</option>
+          <option value="Alpha-1">Альфа-1</option>
+          <option value="Beta-7">Бета-7</option>
+          <option value="Epsilon-11">Епсилон-11</option>
+          <option value="Tau-5">Тау-5</option>
+        </select>
+      </div>
       <label>Сайт:</label>
       <select id="newSite">
         <option value="Site-17">Site-17</option>
@@ -101,67 +106,62 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Текущий пользователь (из localStorage)
     let user = JSON.parse(localStorage.getItem("user") || "null");
     if (!user) window.location.href = "index.html";
 
-    // Загружаем актуальные данные из Firebase
     async function loadUserInfo() {
       const snap = await get(ref(db, "users/" + user.nick));
       if (snap.exists()) {
         user = snap.val();
         user.nick = snap.key;
-        localStorage.setItem("user", JSON.stringify(user)); // сохраняем свежие данные
+        localStorage.setItem("user", JSON.stringify(user));
 
         document.getElementById("userInfo").innerHTML =
           `<b>Добро пожаловать, ${user.nick}!</b><br>
            Ваш уровень: <span style="color:#ff5555">${user.level}</span><br>
-           Ваша роль: ${user.role}${user.unit ? " ("+user.unit+")" : ""}<br>
-           Ваш сайт: ${user.site || "—"}`;
+           Ваша роль: ${user.role}<br>
+           Ваш сайт: ${user.site || "—"}<br>
+           ${user.role === "MTF" && user.unit ? "Подразделение: " + user.unit : ""}`;
 
-        // Админ видит панели
+        if ((user.role === "Researcher" && user.level > 3) || user.level >= 4) {
+          document.getElementById("addScpPanel").style.display = "block";
+        }
         if (Number(user.level) >= 4) {
           document.getElementById("adminPanel").style.display = "block";
-        }
-
-        // Добавление SCP доступно только Researcher c уровнем >3
-        if (user.role === "Researcher" && Number(user.level) > 3) {
-          document.getElementById("addScpPanel").style.display = "block";
         }
       }
     }
 
     loadUserInfo();
 
-    // Выйти
     window.logout = () => { localStorage.removeItem("user"); window.location.href = "index.html"; };
 
-    // Обновить пользователя (для админов)
+    window.toggleUnit = () => {
+      const role = document.getElementById("newRole").value;
+      const unitDiv = document.getElementById("unitDiv");
+      if (role === "MTF") {
+        unitDiv.style.display = "block";
+      } else {
+        unitDiv.style.display = "none";
+        document.getElementById("newUnit").value = "";
+      }
+    };
+
     window.updateUser = async () => {
       const nick = document.getElementById("targetNick").value.trim();
       const level = parseInt(document.getElementById("newLevel").value);
       const role = document.getElementById("newRole").value;
       const site = document.getElementById("newSite").value;
       const unit = document.getElementById("newUnit").value;
-
       if (!nick) return alert("Введите ник пользователя");
       const uref = ref(db, "users/" + nick);
       const snap = await get(uref);
       if (!snap.exists()) return alert("Пользователь не найден");
-
-      let data = { level, role, site };
-      if (role === "MTF") data.unit = unit; else data.unit = null;
-
-      await update(uref, data);
-      alert(`Пользователь ${nick} обновлён: Level ${level}, Role ${role}, Site ${site}${role==="MTF" ? ", Unit "+unit : ""}`);
+      await update(uref, { level, role, site, unit });
+      alert(`Пользователь ${nick} обновлён: Level ${level}, Role ${role}, Site ${site}${role === "MTF" ? ", Unit " + unit : ""}`);
     };
 
-    // Добавить SCP (для Researcher >3)
     window.addScp = async () => {
-      if (!(user.role === "Researcher" && Number(user.level) > 3)) {
-        return alert("У вас нет прав для добавления SCP!");
-      }
-
       const title = document.getElementById("scpTitle").value.trim();
       const requiredLevel = parseInt(document.getElementById("scpLevel").value);
       const content = document.getElementById("scpContent").value.trim();
@@ -176,7 +176,6 @@
       document.getElementById("scpContent").value = "";
     };
 
-    // Список SCP
     const entriesDiv = document.getElementById("entries");
     const searchInput = document.getElementById("search");
 
