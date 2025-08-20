@@ -105,7 +105,7 @@
     import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 
-    // 🔧 ТВОИ НАСТРОЙКИ FIREBASE
+    // 🔧 Настройки Firebase
     const firebaseConfig = {
       apiKey: "AIzaSy....", // твой ключ
       authDomain: "scp-foundation.firebaseapp.com",
@@ -137,32 +137,49 @@
       userLevel = data.level || 1;
       userRole = data.role || "Researcher";
 
-      document.getElementById("authSection").style.display = "none";
-      document.getElementById("logoutBtn").style.display = "inline";
+      // 🔹 сохраняем в localStorage
+      localStorage.setItem("currentUser", JSON.stringify({
+        nick: currentUser,
+        level: userLevel,
+        role: userRole
+      }));
 
-      document.getElementById("userInfo").innerHTML = `
-        Добро пожаловать, ${nick}! <br>
-        Ваш уровень: ${userLevel} <br>
-        Ваша роль: ${userRole}
-      `;
-
-      if (userLevel >= 4) {
-        document.getElementById("adminPanel").style.display = "block";
-      }
-
+      renderUser();
       loadEntries();
     }
 
     // выход
     function logout() {
+      localStorage.removeItem("currentUser"); // 🔹 чистим localStorage
       currentUser = null;
       userLevel = 0;
       userRole = "Researcher";
-      document.getElementById("authSection").style.display = "block";
-      document.getElementById("logoutBtn").style.display = "none";
-      document.getElementById("userInfo").innerHTML = "";
-      document.getElementById("adminPanel").style.display = "none";
+      renderUser();
       document.getElementById("entries").innerHTML = "Нет SCP записей";
+    }
+
+    // 🔹 отображение интерфейса
+    function renderUser() {
+      const authSection = document.getElementById("authSection");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const userInfo = document.getElementById("userInfo");
+      const adminPanel = document.getElementById("adminPanel");
+
+      if (currentUser) {
+        authSection.style.display = "none";
+        logoutBtn.style.display = "inline";
+        userInfo.innerHTML = `
+          Добро пожаловать, ${currentUser}! <br>
+          Ваш уровень: ${userLevel} <br>
+          Ваша роль: ${userRole}
+        `;
+        adminPanel.style.display = userLevel >= 4 ? "block" : "none";
+      } else {
+        authSection.style.display = "block";
+        logoutBtn.style.display = "none";
+        userInfo.innerHTML = "";
+        adminPanel.style.display = "none";
+      }
     }
 
     // админ изменяет юзера
@@ -210,6 +227,21 @@
         });
       });
     }
+
+    // 🔹 при загрузке проверяем localStorage
+    window.onload = () => {
+      const saved = localStorage.getItem("currentUser");
+      if (saved) {
+        const data = JSON.parse(saved);
+        currentUser = data.nick;
+        userLevel = data.level;
+        userRole = data.role;
+        renderUser();
+        loadEntries();
+      } else {
+        renderUser();
+      }
+    };
 
     window.login = login;
     window.logout = logout;
