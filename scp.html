@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>SCP Entry</title>
+  <style>
+    body { background: #111; color: #eee; font-family: Arial, sans-serif; text-align: center; }
+    input, button, textarea { margin: 5px; padding: 8px; border-radius: 5px; border: none; }
+    button { background: #222; color: white; cursor: pointer; }
+    button:hover { background: #444; }
+    .scp { background: #1c1c1c; padding: 20px; border-radius: 8px; margin: 20px auto; width: 60%; }
+  </style>
+</head>
+<body>
+  <h1>SCP Entry</h1>
+  <div id="content"></div>
+  <script>
+    let users = JSON.parse(localStorage.getItem("scpUsers")) || [];
+    let scpData = JSON.parse(localStorage.getItem("scpData")) || [];
+    let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+    const params = new URLSearchParams(window.location.search);
+    const scpId = params.get("id");
+    const scp = scpData.find(s => s.id === scpId);
+
+    const content = document.getElementById("content");
+
+    if (!scp) {
+      content.innerHTML = "<p>Такого SCP не существует.</p>";
+    } else if (!currentUser || currentUser.level < scp.level) {
+      content.innerHTML = "<h2>ACCESS DENIED</h2><p>Уровень допуска недостаточен.</p>";
+    } else {
+      content.innerHTML = `
+        <div class="scp">
+          <h2>${scp.id}</h2>
+          <p><b>Класс:</b> ${scp.class}</p>
+          <p>${scp.description}</p>
+          <button onclick="editSCP()">Редактировать</button>
+          <button onclick="deleteSCP()">Удалить</button>
+        </div>
+      `;
+    }
+
+    function saveSCP() {
+      localStorage.setItem("scpData", JSON.stringify(scpData));
+    }
+
+    function editSCP() {
+      if (!currentUser || currentUser.level < 3) return alert("Недостаточно прав");
+      const newDesc = prompt("Введите новое описание:", scp.description);
+      if (newDesc) {
+        scp.description = newDesc;
+        saveSCP();
+        location.reload();
+      }
+    }
+
+    function deleteSCP() {
+      if (!currentUser || currentUser.level < 4) return alert("Недостаточно прав для удаления");
+      scpData = scpData.filter(s => s.id !== scpId);
+      saveSCP();
+      alert("SCP удалён");
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
