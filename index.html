@@ -10,18 +10,9 @@
       font-family: Arial, sans-serif;
       transition: background-color 0.4s, color 0.4s;
     }
-
-    body.light {
-      background-color: #ffffff;
-      color: #000000;
-    }
-
-    body.dark {
-      background-color: #0d0d0d;
-      color: #f5f5f5;
-    }
-
-    #theme-toggle {
+    body.light { background-color: #fff; color: #000; }
+    body.dark { background-color: #0d0d0d; color: #f5f5f5; }
+    #theme-toggle, #level-select {
       position: fixed;
       top: 15px;
       right: 15px;
@@ -32,36 +23,20 @@
       background: linear-gradient(135deg, #444, #222);
       color: white;
       font-size: 14px;
-      transition: background 0.3s;
       z-index: 1000;
+      margin-left: 10px;
     }
-
-    #theme-toggle:hover {
-      background: linear-gradient(135deg, #666, #333);
-    }
-
-    main {
-      padding: 50px 20px;
-      max-width: 800px;
-      margin: auto;
-    }
-
+    main { padding: 60px 20px; max-width: 800px; margin: auto; }
     .scp-card {
-      background-color: rgba(255, 255, 255, 0.05);
+      background-color: rgba(255,255,255,0.05);
       border: 1px solid #888;
       padding: 20px;
       margin: 30px 0;
       border-radius: 8px;
-      text-align: left;
       transition: transform 0.3s, background-color 0.3s;
     }
-
-    .scp-card:hover {
-      transform: scale(1.02);
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .access-btn {
+    .scp-card:hover { transform: scale(1.02); background-color: rgba(255,255,255,0.1); }
+    .access-btn, #create-btn {
       margin-top: 10px;
       padding: 8px 12px;
       background-color: #222;
@@ -70,135 +45,120 @@
       border-radius: 4px;
       cursor: pointer;
     }
-
-    .access-btn:hover {
-      background-color: #444;
-    }
-
-    /* Модальное окно */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 2000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.8);
-    }
-
-    .modal-content {
-      background-color: #1a1a1a;
-      margin: 10% auto;
+    .access-btn:hover, #create-btn:hover { background-color: #444; }
+    #create-form {
+      margin-top: 40px;
       padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-      max-width: 600px;
-      color: #f5f5f5;
+      border: 1px dashed #666;
       border-radius: 8px;
-      position: relative;
     }
-
-    .close {
-      color: #aaa;
-      position: absolute;
-      top: 10px;
-      right: 20px;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .close:hover {
-      color: white;
+    input, textarea {
+      width: 100%;
+      margin: 10px 0;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #aaa;
     }
   </style>
 </head>
 <body>
   <button id="theme-toggle">🌙 Dark Mode</button>
-
+  <select id="level-select">
+    <option value="1">Уровень 1</option>
+    <option value="2">Уровень 2</option>
+    <option value="3">Уровень 3</option>
+    <option value="4">Уровень 4</option>
+    <option value="5">Уровень 5</option>
+  </select>
   <main>
     <h1>SCP Foundation</h1>
     <h2>Добро пожаловать в архив</h2>
     <div id="scp-container"></div>
+
+    <div id="create-form">
+      <h3>Создать SCP-карточку</h3>
+      <input type="text" id="new-id" placeholder="SCP ID (например, SCP-999)" />
+      <input type="number" id="new-level" placeholder="Требуемый уровень доступа (1–5)" />
+      <input type="text" id="new-class" placeholder="Класс объекта" />
+      <textarea id="new-desc" placeholder="Описание объекта"></textarea>
+      <button id="create-btn">Создать</button>
+    </div>
   </main>
 
-  <!-- Модальное окно -->
-  <div id="scp-modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2 id="modal-title"></h2>
-      <p><strong>Класс объекта:</strong> <span id="modal-class"></span></p>
-      <p><strong>Описание:</strong> <span id="modal-description"></span></p>
-    </div>
-  </div>
-
   <script>
-    const toggleBtn = document.getElementById('theme-toggle');
     const body = document.body;
+    const toggleBtn = document.getElementById('theme-toggle');
+    const levelSelect = document.getElementById('level-select');
+    const container = document.getElementById('scp-container');
+    const createBtn = document.getElementById('create-btn');
 
     body.classList.add('light');
-
     toggleBtn.addEventListener('click', () => {
       body.classList.toggle('dark');
       body.classList.toggle('light');
       toggleBtn.textContent = body.classList.contains('dark') ? '☀️ Light Mode' : '🌙 Dark Mode';
     });
 
-    const scpData = [
-      {
-        id: "SCP-173",
-        class: "Евклид",
-        description: "Статуя, способная двигаться, когда её не видят. Очень опасна."
-      },
-      {
-        id: "SCP-096",
-        class: "Евклид",
-        description: "Существо, которое впадает в ярость, если кто-то увидит его лицо."
-      },
-      {
-        id: "SCP-682",
-        class: "Кетер",
-        description: "Практически неуничтожаемое существо с ненавистью ко всему живому."
-      }
-    ];
-
-    const container = document.getElementById("scp-container");
-    const modal = document.getElementById("scp-modal");
-    const modalTitle = document.getElementById("modal-title");
-    const modalClass = document.getElementById("modal-class");
-    const modalDescription = document.getElementById("modal-description");
-    const closeBtn = document.querySelector(".close");
-
-    scpData.forEach(obj => {
-      const card = document.createElement("section");
-      card.className = "scp-card";
-      card.innerHTML = `
-        <h2>${obj.id}</h2>
-        <p><strong>Класс объекта:</strong> ${obj.class}</p>
-        <a href="scp-173.html" class="access-btn">Открыть файл</a>
-
-      `;
-      const btn = card.querySelector(".access-btn");
-      btn.addEventListener("click", () => {
-        modalTitle.textContent = obj.id;
-        modalClass.textContent = obj.class;
-        modalDescription.textContent = obj.description;
-        modal.style.display = "block";
-      });
-      container.appendChild(card);
+    levelSelect.addEventListener('change', () => {
+      localStorage.setItem('accessLevel', levelSelect.value);
+      renderCards();
     });
 
-    closeBtn.onclick = () => {
-      modal.style.display = "none";
-    };
+    const defaultSCPs = [
+      { id: "SCP-173", level: 2, class: "Евклид", description: "Статуя, способная двигаться, когда её не видят." },
+      { id: "SCP-096", level: 4, class: "Евклид", description: "Существо, впадающее в ярость при взгляде на лицо." },
+      { id: "SCP-682", level: 5, class: "Кетер", description: "Практически неуничтожаемое существо." }
+    ];
 
-    window.onclick = (event) => {
-      if (event.target === modal) {
-        modal.style.display = "none";
-      }
-    };
+    function getAllSCPs() {
+      const saved = JSON.parse(localStorage.getItem("customSCPs") || "[]");
+      return [...defaultSCPs, ...saved];
+    }
+
+    function renderCards() {
+      const accessLevel = parseInt(localStorage.getItem("accessLevel") || "1");
+      levelSelect.value = accessLevel;
+      container.innerHTML = "";
+
+      getAllSCPs().forEach(obj => {
+        const card = document.createElement("section");
+        card.className = "scp-card";
+        card.innerHTML = `
+          <h2>${obj.id}</h2>
+          <p><strong>Класс:</strong> ${obj.class}</p>
+          <p><strong>Требуемый уровень:</strong> ${obj.level}</p>
+          <button class="access-btn">Открыть файл</button>
+        `;
+        card.querySelector(".access-btn").addEventListener("click", () => {
+          if (accessLevel >= obj.level) {
+            alert(`📂 Доступ разрешён:\n\n${obj.description}`);
+          } else {
+            alert("⛔ Access Denied: Уровень допуска недостаточен.");
+          }
+        });
+        container.appendChild(card);
+      });
+    }
+
+    createBtn.addEventListener("click", () => {
+      const accessLevel = parseInt(localStorage.getItem("accessLevel") || "1");
+      if (accessLevel < 3) return alert("⛔ Недостаточный уровень для создания карточек.");
+
+      const id = document.getElementById("new-id").value.trim();
+      const level = parseInt(document.getElementById("new-level").value);
+      const cls = document.getElementById("new-class").value.trim();
+      const desc = document.getElementById("new-desc").value.trim();
+
+      if (!id || !cls || !desc || isNaN(level)) return alert("⚠️ Заполни все поля корректно.");
+
+      const newCard = { id, level, class: cls, description: desc };
+      const saved = JSON.parse(localStorage.getItem("customSCPs") || "[]");
+      saved.push(newCard);
+      localStorage.setItem("customSCPs", JSON.stringify(saved));
+      renderCards();
+    });
+
+    renderCards();
   </script>
 </body>
 </html>
