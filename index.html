@@ -1,208 +1,211 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>SCP Foundation</title>
+  <meta charset="UTF-8">
+  <title>Мой SCP-Архив</title>
   <style>
     body {
-      font-family: Arial;
-      background: #111;
-      color: #eee;
-      padding: 20px;
-      transition: background 0.3s, color 0.3s;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0 1rem;
+      transition: background .3s, color .3s;
     }
-    input, select, button, textarea {
-      margin: 10px 0;
-      padding: 8px;
-      width: 100%;
-      border-radius: 4px;
-      border: none;
+    [data-theme="light"] {
+      background: #f5f5f5;
+      color: #222;
     }
-    .hidden { display: none; }
-    .scp-link {
-      display: block;
-      margin: 8px 0;
-      color: #0ff;
-      text-decoration: none;
-    }
-    .scp-link:hover { text-decoration: underline; }
-    #profile {
-      margin: 20px 0;
-      padding: 10px;
+    [data-theme="dark"] {
       background: #222;
-      border-radius: 6px;
+      color: #f5f5f5;
     }
-    #admin-panel {
-      background: #333;
-      padding: 10px;
-      border-radius: 6px;
-      margin-top: 20px;
+    .hidden {
+      display: none;
+    }
+    button {
+      margin: .25rem;
+      padding: .5rem 1rem;
     }
     #scp-modal {
       position: fixed;
-      top: 10%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #222;
-      padding: 20px;
-      border-radius: 8px;
-      width: 80%;
-      max-width: 600px;
-      display: none;
-      z-index: 1000;
-    }
-    #scp-modal h2 { margin-top: 0; }
-    #overlay {
-      position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
-      display: none;
-      z-index: 999;
+      background: rgba(0,0,0,.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #scp-modal .box {
+      background: white;
+      color: black;
+      padding: 1rem;
+      border-radius: 4px;
+      max-width: 400px;
+      width: 90%;
+      position: relative;
+    }
+    #scp-modal .close {
+      position: absolute;
+      top: .5rem;
+      right: .5rem;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+    [data-theme="dark"] #scp-modal .box {
+      background: #333;
+      color: #eee;
     }
     #theme-toggle {
       position: fixed;
       top: 1rem;
       right: 1rem;
-      padding: 0.5rem 1rem;
-      background: #444;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
     }
   </style>
 </head>
-<body data-theme="dark">
-
+<body data-theme="light">
+  <!-- Переключатель темы -->
   <button id="theme-toggle">🌙 / ☀️</button>
 
-  <h1>SCP Foundation Archive</h1>
+  <!-- Блок авторизации -->
+  <div id="auth" class="hidden"></div>
 
-  <div id="auth">
-    <h2>Авторизация</h2>
-    <input type="text" id="login-name" placeholder="Имя пользователя" />
-    <input type="password" id="login-pass" placeholder="Пароль" />
-    <button onclick="login()">Войти</button>
-    <button onclick="register()">Регистрация</button>
-  </div>
-
-  <div id="main" class="hidden">
-    <div id="profile"></div>
-
-    <input type="text" id="search" placeholder="Поиск SCP..." oninput="renderSCPList()" />
-
-    <h2>Архив SCP</h2>
+  <!-- Основной архив -->
+  <div id="archive" class="hidden">
+    <h1>Список SCP</h1>
     <div id="scp-list"></div>
+  </div>
 
-    <div id="create-form">
-      <h3>Создать SCP</h3>
-      <input type="text" id="new-id" placeholder="SCP ID" />
-      <input type="number" id="new-level" placeholder="Уровень доступа (1–5)" />
-      <input type="text" id="new-class" placeholder="Класс объекта" />
-      <textarea id="new-desc" placeholder="Описание"></textarea>
-      <button onclick="createSCP()">Создать</button>
-    </div>
-
-    <div id="admin-panel" class="hidden">
-      <h3>Панель администратора</h3>
-      <input type="text" id="target-user" placeholder="Имя пользователя для выдачи роли" />
-      <select id="target-role">
-        <option value="Исследователь">Исследователь</option>
-        <option value="О5">О5</option>
-      </select>
-      <button onclick="assignRole()">Выдать роль</button>
+  <!-- Модальное окно деталей SCP -->
+  <div id="scp-modal" class="hidden">
+    <div class="box">
+      <span class="close">×</span>
+      <h2 class="title"></h2>
+      <p class="description"></p>
     </div>
   </div>
 
-  <div id="overlay" onclick="closeModal()"></div>
-  <div id="scp-modal"></div>
-
+  <!-- Встроенный JS -->
   <script>
-    let currentUser = null;
-    let users = [];
-    let scpData = [
-      { id: "SCP-096", level: 4, class: "Евклид", description: "Существо, впадающее в ярость при взгляде на лицо." },
-      { id: "SCP-173", level: 2, class: "Евклид", description: "Статуя, способная двигаться, когда её не видят." },
-      { id: "SCP-682", level: 5, class: "Кетер", description: "Практически неуничтожаемое существо." }
-    ];
+    ;(function() {
+      const IDS = {
+        auth: 'auth',
+        archive: 'archive',
+        list: 'scp-list',
+        modal: 'scp-modal',
+        themeToggle: 'theme-toggle'
+      };
 
-    function loadUsers() {
-      const saved = localStorage.getItem("scpUsers");
-      users = saved ? JSON.parse(saved) : [
-        { username: "admin", password: "1234", role: "Администратор", level: 5 },
-        { username: "bright", password: "scp", role: "Исследователь", level: 3 }
-      ];
-    }
+      let currentUser = null;
 
-    function saveUsers() {
-      localStorage.setItem("scpUsers", JSON.stringify(users));
-    }
-
-    function login() {
-      const name = document.getElementById("login-name").value.trim();
-      const pass = document.getElementById("login-pass").value.trim();
-      const user = users.find(u => u.username === name && u.password === pass);
-      if (!user) return alert("Неверные данные");
-      currentUser = user;
-      document.getElementById("auth").classList.add("hidden");
-      document.getElementById("main").classList.remove("hidden");
-      document.getElementById("profile").innerHTML = `<strong>Профиль:</strong> ${user.username} | Уровень: ${user.level} | Роль: ${user.role}`;
-      if (user.role === "Администратор") document.getElementById("admin-panel").classList.remove("hidden");
-      renderSCPList();
-    }
-
-    function register() {
-      const name = document.getElementById("login-name").value.trim();
-      const pass = document.getElementById("login-pass").value.trim();
-      if (!name || !pass) return alert("⚠️ Введите имя и пароль");
-      if (users.find(u => u.username === name)) return alert("🚫 Пользователь уже существует");
-      const newUser = { username: name, password: pass, role: "Исследователь", level: 1 };
-      users.push(newUser);
-      saveUsers();
-      alert("✅ Регистрация успешна! Теперь войдите.");
-    }
-
-    function renderSCPList() {
-      const query = document.getElementById("search").value.toLowerCase();
-      const list = document.getElementById("scp-list");
-      list.innerHTML = "";
-      scpData.filter(scp => scp.id.toLowerCase().includes(query)).forEach(scp => {
-        const link = document.createElement("a");
-        link.className = "scp-link";
-        link.href = "#";
-        link.textContent = scp.id;
-        link.onclick = () => openSCP(scp);
-        list.appendChild(link);
-      });
-    }
-
-    function openSCP(scp) {
-      if (currentUser.level < scp.level) {
-        alert("⛔ Access Denied: Уровень допуска недостаточен.");
-        return;
+      function $(id) {
+        return document.getElementById(id);
       }
-      const modal = document.getElementById("scp-modal");
-      modal.innerHTML = `<h2>${scp.id}</h2><p><strong>Класс:</strong> ${scp.class}</p><p>${scp.description}</p><button onclick="closeModal()">Закрыть</button>`;
-      document.getElementById("overlay").style.display = "block";
-      modal.style.display = "block";
-    }
 
-    function closeModal() {
-      document.getElementById("overlay").style.display = "none";
-      document.getElementById("scp-modal").style.display = "none";
-    }
+      function show(el) {
+        el && el.classList.remove('hidden');
+      }
 
-    function createSCP() {
-      if (currentUser.level < 3) return alert("⛔ Недостаточный уровень для создания SCP.");
-      const id = document.getElementById("new-id").value.trim();
-      const level = parseInt(document.getElementById("new-level").value);
-      const cls = document.getElementById("new-class").value.trim();
-      const desc = document.getElementById("new-desc").value.trim();
-      if (!id || !cls || !desc || isNaN(level)) return alert("⚠️ Заполни все поля.");
-      if (level > 5) return alert("🚫 Нельзя создать SCP с уровнем 6 или выше.");
-      scpData.push({ id, level, class: cls, description: desc });
-      renderSCPList();
-    }
+      function hide(el) {
+        el && el.classList.add('hidden');
+      }
 
-    function assignRole() {
+      function setTheme(t) {
+        document.body.dataset.theme = t;
+        localStorage.setItem('theme', t);
+      }
+
+      function loadTheme() {
+        setTheme(localStorage.getItem('theme') || 'light');
+      }
+
+      function initThemeToggle() {
+        const btn = $(IDS.themeToggle);
+        btn.addEventListener('click', () => {
+          setTheme(document.body.dataset.theme === 'light' ? 'dark' : 'light');
+        });
+      }
+
+      function authenticate(u, p) {
+        return u === 'admin' && p === 'password' ? { name:'Admin', level:5 } : null;
+      }
+
+      function handleLogin(e) {
+        e.preventDefault();
+        const f = e.target;
+        const user = authenticate(f.username.value.trim(), f.password.value);
+        if (user) {
+          currentUser = user;
+          renderUI();
+        } else {
+          alert('Неверный логин/пароль');
+        }
+      }
+
+      function createLoginForm() {
+        const f = document.createElement('form');
+        f.innerHTML = `
+          <label>Логин: <input name="username" required></label><br>
+          <label>Пароль: <input type="password" name="password" required></label><br>
+          <button>Войти</button>
+        `;
+        f.addEventListener('submit', handleLogin);
+        return f;
+      }
+
+      function loadSCPList() {
+        return [
+          {id:1, title:'SCP-001', level:1, desc:'Описание SCP-001'},
+          {id:2, title:'SCP-173', level:2, desc:'Описание SCP-173'},
+          {id:3, title:'SCP-682', level:5, desc:'Описание SCP-682'},
+          {id:4, title:'SCP-999', level:1, desc:'Описание SCP-999'}
+        ];
+      }
+
+      function renderSCPList() {
+        const container = $(IDS.list);
+        container.innerHTML = '';
+        loadSCPList().forEach(item => {
+          const btn = document.createElement('button');
+          btn.textContent = item.title;
+          btn.disabled = currentUser.level < item.level;
+          btn.onclick = () => showSCP(item);
+          container.appendChild(btn);
+        });
+      }
+
+      function showSCP(item) {
+        const m = $(IDS.modal);
+        m.querySelector('.title').textContent = item.title;
+        m.querySelector('.description').textContent = item.desc;
+        show(m);
+      }
+
+      function initModal() {
+        const m = $(IDS.modal);
+        m.querySelector('.close').onclick = () => hide(m);
+      }
+
+      function renderUI() {
+        const auth = $(IDS.auth);
+        const arch = $(IDS.archive);
+        if (!currentUser) {
+          hide(arch);
+          auth.innerHTML = '';
+          auth.appendChild(createLoginForm());
+          show(auth);
+        } else {
+          hide(auth);
+          show(arch);
+          renderSCPList();
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        loadTheme();
+        initThemeToggle();
+        initModal();
+        renderUI();
+      });
+    })();
+  </script>
+</body>
+</html>
