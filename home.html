@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>SCP Foundation DB - Главная</title>
+  <style>
+    body { background:#111; color:#eee; font-family:Arial; display:flex; }
+    #sidebar { width:250px; background:#1a1a1a; padding:15px; }
+    #content { flex:1; padding:20px; }
+    .scp-entry { background:#222; padding:10px; margin:5px 0; border-radius:5px; cursor:pointer; display:block; color:white; text-decoration:none; }
+    .scp-entry:hover { background:#333; }
+    input,button,select,textarea { margin:5px; padding:6px; border:none; border-radius:4px; }
+    button { background:#222; color:white; cursor:pointer; }
+    button:hover { background:#444; }
+    #createBtn { position:fixed; bottom:20px; right:20px; padding:10px 15px; border-radius:50%; }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <h3>🔎 Поиск SCP</h3>
+    <input type="text" id="search" placeholder="Поиск...">
+    <div id="entries"></div>
+  </div>
+
+  <div id="content">
+    <h1>Добро пожаловать, <span id="userNick"></span></h1>
+    <p>Ваш уровень: <span id="userLevel"></span></p>
+    <button onclick="logout()">Выход</button>
+  </div>
+
+  <button id="createBtn" onclick="createSCP()">+</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, get, child, push, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
+      authDomain: "scp-foundation-45b20.firebaseapp.com",
+      databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com",
+      projectId: "scp-foundation-45b20",
+      storageBucket: "scp-foundation-45b20.appspot.com",
+      messagingSenderId: "383272466518",
+      appId: "1:383272466518:web:3225b8911a56c9d769e3f7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const nick = localStorage.getItem("nick");
+    const userLevel = parseInt(localStorage.getItem("level") || 1);
+    if (!nick) window.location.href = "index.html";
+
+    document.getElementById("userNick").innerText = nick;
+    document.getElementById("userLevel").innerText = userLevel;
+
+    async function loadEntries() {
+      const snap = await get(ref(db, "scp"));
+      const entriesDiv = document.getElementById("entries");
+      entriesDiv.innerHTML = "";
+
+      if (!snap.exists()) {
+        entriesDiv.innerHTML = "Нет SCP записей";
+        return;
+      }
+
+      snap.forEach(child => {
+        const data = child.val();
+        const link = document.createElement("a");
+        link.href = `scp.html?id=${child.key}`;
+        link.className = "scp-entry";
+        link.innerText = `${data.title} (Level ${data.requiredLevel})`;
+        entriesDiv.appendChild(link);
+      });
+    }
+
+    function createSCP() {
+      const title = prompt("Введите название SCP:");
+      const text = prompt("Введите текст SCP:");
+      const level = parseInt(prompt("Минимальный уровень (1-5):")) || 1;
+
+      const scpRef = push(ref(db, "scp"));
+      set(scpRef, { title, text, requiredLevel: level, author: nick }).then(() => {
+        loadEntries();
+      });
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "index.html";
+    }
+
+    document.getElementById("search").addEventListener("input", e => {
+      const q = e.target.value.toLowerCase();
+      document.querySelectorAll(".scp-entry").forEach(el => {
+        el.style.display = el.innerText.toLowerCase().includes(q) ? "block" : "none";
+      });
+    });
+
+    loadEntries();
+
+    window.logout = logout;
+    window.createSCP = createSCP;
+  </script>
+</body>
+</html>
