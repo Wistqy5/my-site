@@ -169,22 +169,6 @@
     const fullUser = snap.val();
 
     const container = document.getElementById("user-info");
-    container.innerHTML = `
-      <p><b>Ник:</b> ${user.nick}</p>
-      <p><b>Уровень:</b> ${fullUser.level}</p>
-      <p><b>Роль:</b> ${fullUser.role}</p>
-      <p><b>Site:</b> ${fullUser.site || "Не назначен"}</p>
-    `;
-
-    // Если уровень > 3, разрешаем менять Site
-    if (fullUser.level > 3) {
-      const select = document.createElement("select");
-      ["Site-17", "Site-82", "Site-19", "Site-12"].forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = s; opt.textContent = s;
-        if (fullUser.site === s) opt.selected = true;
-        select.appendChild(opt);
-      });
 
     // Добавить SCP (для админов)
     window.addScp = async () => {
@@ -193,12 +177,8 @@
       const content = document.getElementById("scpContent").value.trim();
       if (!title || !content || !requiredLevel) return alert("Заполните все поля");
       const btn = document.createElement("button");
-      btn.textContent = "Изменить сайт";
-      btn.onclick = async () => {
-        await update(ref(db, "users/" + user.nick), { site: select.value });
-        alert("Сайт изменён на " + select.value);
-        location.reload();
-      };
+      
+      
 
       const newRef = push(ref(db, "scp"));
       await set(newRef, { title, requiredLevel, content, author: user.nick, createdAt: Date.now() });
