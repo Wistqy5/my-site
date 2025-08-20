@@ -134,9 +134,17 @@
            Ваш сайт: ${user.site || "—"}<br>
            ${user.role === "MTF" && user.unit ? "Подразделение: " + user.unit : ""}`;
 
-        if ((user.role === "Researcher" && user.level > 3) || user.level >= 4) {
+        // === ДОСТУП К СОЗДАНИЮ SCP ===
+        if (
+          (user.role === "Researcher" && user.level > 3) ||
+          user.role === "O5" ||
+          user.role === "The Administrator" ||
+          user.role === "Office of The Administrator"
+        ) {
           document.getElementById("addScpPanel").style.display = "block";
         }
+
+        // === ДОСТУП К АДМИН-ПАНЕЛИ И ПРОСМОТРУ ===
         if (Number(user.level) >= 4) {
           document.getElementById("adminPanel").style.display = "block";
           document.getElementById("statsPanel").style.display = "block";
