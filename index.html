@@ -1,8 +1,8 @@
 <script>
   // ——— Данные и хранение ———
   const DEFAULT_USERS = [
-    { username: "admin",  password: "1234", role: "Администратор", level: 5 },
-    { username: "bright", password: "scp",  role: "Исследователь", level: 3 }
+    { username: "admin", password: "1234", role: "Администратор", level: 5 },
+    { username: "bright", password: "scp", role: "Исследователь", level: 3 }
   ];
 
   let users = loadUsers();
@@ -22,6 +22,7 @@
     }
     try { return JSON.parse(raw); } catch { return [...DEFAULT_USERS]; }
   }
+
   function saveUsers() {
     localStorage.setItem("scp_users", JSON.stringify(users));
   }
@@ -30,6 +31,7 @@
     const raw = localStorage.getItem("scp_session");
     try { return raw ? JSON.parse(raw) : null; } catch { return null; }
   }
+
   function saveSession(userOrNull) {
     if (userOrNull) localStorage.setItem("scp_session", JSON.stringify(userOrNull));
     else localStorage.removeItem("scp_session");
@@ -45,7 +47,6 @@
         <div><strong>Профиль:</strong> ${currentUser.username} | Уровень: ${currentUser.level} | Роль: ${currentUser.role}</div>
         <button onclick="logout()">Выйти</button>
       `;
-      // Права доступа
       const adminPanel = document.getElementById("admin-panel");
       if (currentUser.role === "Администратор") adminPanel.classList.remove("hidden");
       else adminPanel.classList.add("hidden");
@@ -82,6 +83,7 @@
         list.appendChild(link);
       });
   }
+
   function lockBadge(level) {
     return `(L${level})`;
   }
@@ -104,7 +106,6 @@
   function logout() {
     currentUser = null;
     saveSession(null);
-    // Очистим поля входа
     document.getElementById("login-name").value = "";
     document.getElementById("login-pass").value = "";
     renderUI();
@@ -127,7 +128,6 @@
     users.push(newUser);
     saveUsers();
     alert("Аккаунт создан. Теперь войдите под своими данными.");
-    // Свернём форму регистрации
     document.getElementById("register-form").classList.add("hidden");
     document.getElementById("login-name").value = name;
   }
@@ -164,7 +164,6 @@
     if (level < 1 || level > 5) return alert("🚫 Уровень должен быть от 1 до 5.");
     scpData.push({ id, level, class: cls, description: desc });
     renderSCPList();
-    // Очистим форму
     document.getElementById("new-id").value = "";
     document.getElementById("new-level").value = "";
     document.getElementById("new-class").value = "";
@@ -179,7 +178,6 @@
     const user = users.find(u => u.username === name);
     if (!user) return alert("Пользователь не найден");
     user.role = role;
-    // Обновим уровень, если повышаем до О5 (пример: уровень 5)
     if (role === "О5" && user.level < 5) user.level = 5;
     saveUsers();
     alert(`✅ Роль "${role}" выдана пользователю ${name}`);
@@ -187,7 +185,6 @@
 
   // ——— Автологин при загрузке ———
   window.addEventListener("DOMContentLoaded", () => {
-    // Если есть сессия — заново подтянем пользователя из списка (на случай изменений ролей)
     if (currentUser) {
       const fresh = users.find(u => u.username === currentUser.username);
       currentUser = fresh ? { ...fresh } : null;
