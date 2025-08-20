@@ -165,4 +165,163 @@
         <input type="text" id="targetNick" placeholder="Ник пользователя" />
         <label>Новый уровень:</label>
         <select id="newLevel">
-          <option value="1">Level 1</option
+          <option value="1">Level 1</option>
+          <option value="2">Level 2</option>
+          <option value="3">Level 3</option>
+          <option value="4">Level 4</option>
+          <option value="5">Level 5</option>
+        </select>
+        <label>Роль:</label>
+        <select id="newRole">
+          <option value="Researcher">Researcher</option>
+          <option value="Security">Security</option>
+          <option value="MTF">MTF</option>
+          <option value="Administrator">Administrator</option>
+          <option value="O5">O5 Council</option>
+        </select>
+        <div style="margin-top:6px;">
+          <button onclick="updateUser()">Обновить</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Firebase + логика -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, get, set, update, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
+      authDomain: "scp-foundation-45b20.firebaseapp.com",
+      databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com/",
+      projectId: "scp-foundation-45b20",
+      storageBucket: "scp-foundation-45b20.firebasestorage.app",
+      messagingSenderId: "383272466518",
+      appId: "1:383272466518:web:3225b8911a56c9d769e3f7",
+      measurementId: "G-G84NR3K9G2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let currentUser = null;
+    let userLevel = 0;
+    let userRole = "Researcher";
+
+    async function login(){
+      const nick = document.getElementById("nick").value.trim();
+      const pass = document.getElementById("password").value.trim();
+      if(!nick || !pass){ alert("Введите ник и пароль!"); return; }
+
+      try{
+        const snap = await get(ref(db, "users/" + nick));
+        if(!snap.exists()){ alert("Нет такого пользователя!"); return; }
+        const data = snap.val();
+        if((data.password||"") !== pass){ alert("Неверный пароль!"); return; }
+
+        currentUser = nick;
+        userLevel = data.level || 1;
+        userRole = data.role || "Researcher";
+
+        // UI переключение
+        document.getElementById("authSection").style.display = "none";
+        document.getElementById("userHeader").style.display = "flex";
+        document.getElementById("helloNick").textContent = `Добро пожаловать, ${nick}`;
+        document.getElementById("userInfo").textContent = `Уровень: ${userLevel} • Роль: ${userRole}`;
+
+        document.getElementById("createSCP").style.display = userLevel >= 3 ? "block" : "none";
+        document.getElementById("adminPanel").style.display  = userLevel >= 4 ? "block" : "none";
+
+        loadEntries();
+      }catch(e){
+        console.error(e);
+        alert("Ошибка подключения к базе.");
+      }
+    }
+
+    function logout(){
+      currentUser=null;
+      userLevel=0;
+      userRole="Researcher";
+      document.getElementById("authSection").style.display = "block";
+      document.getElementById("userHeader").style.display  = "none";
+      document.getElementById("createSCP").style.display = "none";
+      document.getElementById("adminPanel").style.display  = "none";
+      document.getElementById("entries").textContent = "Нет SCP записей";
+      (document.getElementById("search").value = "");
+    }
+
+    async function updateUser(){
+      const nick = document.getElementById("targetNick").value.trim();
+      const level = parseInt(document.getElementById("newLevel").value);
+      const role  = document.getElementById("newRole").value;
+
+      if(!nick){ alert("Введите ник пользователя!"); return; }
+      try{
+        const snap = await get(ref(db, "users/" + nick));
+        if(!snap.exists()){ alert("Пользователь не найден!"); return; }
+
+        await update(ref(db, "users/" + nick), { level, role });
+        alert(`Пользователь ${nick} обновлён: Level ${level}, Role ${role}`);
+      }catch(e){
+        console.error(e); alert("Ошибка при обновлении пользователя.");
+      }
+    }
+
+    async function createSCPEntry(){
+      const title = document.getElementById("scpTitle").value.trim();
+      const content = document.getElementById("scpContent").value.trim();
+      const requiredLevel = parseInt(document.getElementById("scpLevel").value);
+
+      if(!title || !content){ alert("Заполните все поля!"); return; }
+      try{
+        const newRef = push(ref(db, "scp"));
+        await set(newRef, { title, content, requiredLevel, author: currentUser });
+        document.getElementById("scpTitle").value = "";
+        document.getElementById("scpContent").value = "";
+        alert("SCP создан!");
+        loadEntries();
+      }catch(e){
+        console.error(e); alert("Ошибка при создании SCP.");
+      }
+    }
+
+    async function loadEntries(){
+      try{
+        const snap = await get(ref(db, "scp"));
+        const list = document.getElementById("entries");
+        list.innerHTML = "";
+        if(!snap.exists()){ list.textContent = "Нет SCP записей"; return; }
+
+        snap.forEach(cs=>{
+          const d = cs.val();
+          const a = document.createElement("a");
+          a.className = "scp-entry";
+          a.href = `scp.html?id=${cs.key}`;
+          a.textContent = `${d.title} (Level ${d.requiredLevel})`;
+          list.appendChild(a);
+        });
+
+        // поиск
+        const input = document.getElementById("search");
+        input.oninput = function(){
+          const q = this.value.toLowerCase();
+          Array.from(list.children).forEach(a=>{
+            a.style.display = a.textContent.toLowerCase().includes(q) ? "block" : "none";
+          });
+        };
+      }catch(e){
+        console.error(e);
+        document.getElementById("entries").textContent = "Ошибка загрузки SCP записей";
+      }
+    }
+
+    // делаем функции доступными кнопкам
+    window.login = login;
+    window.logout = logout;
+    window.updateUser = updateUser;
+    window.createSCPEntry = createSCPEntry;
+  </script>
+</body>
+</html>
