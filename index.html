@@ -120,7 +120,7 @@
       <input id="regPass" type="password" placeholder="Минимум 4 символа">
       <button onclick="register()">Зарегистрироваться</button>
       <div class="muted" style="margin-top:8px;">
-        Будут назначены: уровень 1, роль Researcher.
+        Будут назначены: Уровень 0, Роль Класс-Д.
       </div>
     </div>
   </div>
@@ -155,7 +155,7 @@
       if (!nick || !pass) return alert("Введите ник и пароль");
 
       const snap = await get(ref(db, "users/" + nick));
-      if (!snap.exists()) return alert("Нет такого пользователя");
+      if (!snap.exists()) return alert("Пиздабол");
       const user = snap.val();
       if (user.password !== pass) return alert("Неверный пароль");
 
@@ -173,7 +173,7 @@
       const exists = (await get(path)).exists();
       if (exists) return alert("Такой ник уже занят");
 
-      const newUser = { password: pass, level: 0, role: "Researcher", createdAt: Date.now() };
+      const newUser = { password: pass, level: 0, role: "Class-D", createdAt: Date.now() };
       await set(path, newUser);
       localStorage.setItem("user", JSON.stringify({ nick, level: 1, role: "Researcher" }));
       window.location.href = "home.html";
