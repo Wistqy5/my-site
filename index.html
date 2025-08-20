@@ -159,7 +159,7 @@
       const user = snap.val();
       if (user.password !== pass) return alert("Неверный пароль");
 
-      localStorage.setItem("user", JSON.stringify({ nick, level: user.level || none, role: user.role || "Class-D" }));
+      localStorage.setItem("user", JSON.stringify({ nick, level: user.level || 0, role: user.role || "Class-D" }));
       window.location.href = "home.html";
     };
 
@@ -173,9 +173,9 @@
       const exists = (await get(path)).exists();
       if (exists) return alert("Такой ник уже занят");
 
-      const newUser = { password: pass, level: none, role: "Class-D", createdAt: Date.now() };
+      const newUser = { password: pass, level: 0, role: "Class-D", createdAt: Date.now() };
       await set(path, newUser);
-      localStorage.setItem("user", JSON.stringify({ nick, level: none, role: "Class-D" }));
+      localStorage.setItem("user", JSON.stringify({ nick, level: 0, role: "Class-D" }));
       window.location.href = "home.html";
     };
   </script>
