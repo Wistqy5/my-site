@@ -4,37 +4,11 @@
   <meta charset="UTF-8">
   <title>SCP Foundation DB</title>
   <style>
-    body {
-      background: #111;
-      color: #eee;
-      font-family: Arial, sans-serif;
-      text-align: center;
-    }
-    input {
-      margin: 5px;
-      padding: 8px;
-      border-radius: 5px;
-      border: none;
-    }
-    button {
-      margin: 5px;
-      padding: 10px;
-      background: #222;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #444;
-    }
-    .scp-entry {
-      background: #1c1c1c;
-      margin: 15px;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 5px rgba(255,255,255,0.2);
-    }
+    body { background: #111; color: #eee; font-family: Arial, sans-serif; text-align: center; }
+    input, button { margin: 5px; padding: 8px; border-radius: 5px; border: none; }
+    button { background: #222; color: white; cursor: pointer; }
+    button:hover { background: #444; }
+    .scp-entry { background: #1c1c1c; margin: 15px; padding: 15px; border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -42,29 +16,18 @@
 
   <input type="email" id="email" placeholder="Email"><br>
   <input type="password" id="password" placeholder="Password"><br>
-  <button onclick="register()">Register</button>
   <button onclick="login()">Login</button>
   <button onclick="logout()">Logout</button>
 
+  <div id="userInfo"></div>
   <div id="entries"></div>
 
-  <!-- Весь JS тут -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { 
-      getAuth, 
-      createUserWithEmailAndPassword, 
-      signInWithEmailAndPassword, 
-      signOut 
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-    import { 
-      getDatabase, 
-      ref, 
-      set, 
-      get 
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-    // 🔑 Твои данные Firebase
+    // 🔑 Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
       authDomain: "scp-foundation-45b20.firebaseapp.com",
@@ -76,35 +39,17 @@
       measurementId: "G-G84NR3K9G2"
     };
 
-    // init
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
     const db = getDatabase(app);
 
-    // ------------ AUTH ------------
-    window.register = async function() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-
-      try {
-        const userCred = await createUserWithEmailAndPassword(auth, email, password);
-        const uid = userCred.user.uid;
-        // Новый пользователь получает уровень 1
-        await set(ref(db, "users/" + uid), { level: 1 });
-        alert("Registered! Default access level = 1");
-      } catch (e) {
-        alert(e.message);
-      }
-    };
-
+    // ------------ LOGIN / LOGOUT ------------
     window.login = async function() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-
       try {
         await signInWithEmailAndPassword(auth, email, password);
         alert("Logged in!");
-        loadEntries();
       } catch (e) {
         alert(e.message);
       }
@@ -112,30 +57,32 @@
 
     window.logout = function() {
       signOut(auth).then(() => {
-        alert("Logged out!");
         document.getElementById("entries").innerHTML = "";
+        document.getElementById("userInfo").innerHTML = "";
       });
     };
 
-    // ------------ ENTRIES ------------
-    async function loadEntries() {
+    // ------------ ON AUTH STATE CHANGE ------------
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const token = await user.getIdTokenResult();
+        const level = token.claims.level || 1; // по умолчанию Level 1
+        console.log("Ваш уровень доступа:", level);
+
+        document.getElementById("userInfo").innerHTML = 
+          `<p>Welcome, ${user.email} (Access Level ${level})</p>`;
+
+        loadEntries(level);
+      } else {
+        document.getElementById("userInfo").innerHTML = "<p>Please login</p>";
+      }
+    });
+
+    // ------------ LOAD SCP ENTRIES ------------
+    async function loadEntries(userLevel) {
       const entriesDiv = document.getElementById("entries");
       entriesDiv.innerHTML = "";
 
-      const user = auth.currentUser;
-      if (!user) {
-        entriesDiv.innerHTML = "<p>Please login</p>";
-        return;
-      }
-
-      // Получаем уровень доступа юзера
-      const userSnap = await get(ref(db, "users/" + user.uid));
-      let userLevel = 1;
-      if (userSnap.exists()) {
-        userLevel = userSnap.val().level || 1;
-      }
-
-      // Загружаем SCP записи
       const scpSnap = await get(ref(db, "scp"));
       if (!scpSnap.exists()) {
         entriesDiv.innerHTML = "<p>No SCP entries in DB</p>";
