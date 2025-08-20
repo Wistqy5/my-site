@@ -3,8 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>SCP Foundation</title>
-  <meta charset="UTF-8" />
-  <title>Главная | SCP Foundation</title>
   <style>
     body { background:#0d0d0d; color:#f5f5f5; font-family:Segoe UI, Arial, sans-serif; display:flex; height:100vh; margin:0; }
     #sidebar { width:280px; background:#161616; padding:20px; border-right:2px solid #222; overflow-y:auto; }
@@ -21,51 +19,6 @@
     #logoutBtn { background:#444; }
     #logoutBtn:hover { background:#666; }
     #logo { width:28px; height:28px; vertical-align:-6px; border-radius:0; margin-right:8px; }
-    body {
-      background:#0d0d0d;
-      color:#eee;
-      font-family:Segoe UI, Arial, sans-serif;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-      margin:0;
-    }
-    .box {
-      width:340px; /* сделал поуже */
-      background:#1a1a1a;
-      border-radius:14px;
-      padding:22px;
-      box-shadow:0 8px 24px rgba(0,0,0,.45);
-    }
-    h2 {
-      margin:0 0 14px;
-      font-weight:600;
-    }
-    p {
-      margin:6px 0;
-    }
-    select, button {
-      width:100%;
-      padding:10px;
-      margin-top:10px;
-      border-radius:8px;
-      border:0;
-      font-size:14px;
-    }
-    select {
-      background:#111;
-      color:#eee;
-    }
-    button {
-      background:#c62828;
-      color:#fff;
-      font-weight:600;
-      cursor:pointer;
-    }
-    button:hover {
-      background:#e53935;
-    }
   </style>
 </head>
 <body>
@@ -86,6 +39,7 @@
       <input type="text" id="targetNick" placeholder="Ник пользователя">
       <label>Новый уровень:</label>
       <select id="newLevel">
+        <option value="none">Level none</option>
         <option value="0">Level 0</option>
         <option value="1">Level 1</option><option value="2">Level 2</option>
         <option value="3">Level 3</option><option value="4">Level 4</option><option value="5">Level 5</option>
@@ -111,22 +65,22 @@
       <textarea id="scpContent" placeholder="Описание"></textarea>
       <button onclick="addScp()">Добавить</button>
     </div>
-  <div class="box">
-    <h2>SCP Foundation — Панель</h2>
-    <div id="user-info"></div>
-    <button onclick="logout()">Выйти</button>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getDatabase, ref, set, get, update, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
-    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
       authDomain: "scp-foundation-45b20.firebaseapp.com",
-@@ -83,76 +76,54 @@ <h3>Добавить SCP</h3>
+      databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com/",
+      projectId: "scp-foundation-45b20",
+      storageBucket: "scp-foundation-45b20.appspot.com",
+      messagingSenderId: "383272466518",
+      appId: "1:383272466518:web:3225b8911a56c9d769e3f7"
+    };
+
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
@@ -140,10 +94,6 @@
     if (Number(user.level) >= 4) {
       document.getElementById("adminPanel").style.display = "block";
       document.getElementById("addScpPanel").style.display = "block";
-    // Проверяем вход
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) {
-      window.location.href = "index.html";
     }
 
     // Выйти
@@ -161,14 +111,6 @@
       await update(uref, { level, role });
       alert(`Пользователь ${nick} обновлён: Level ${level}, Role ${role}`);
     };
-    // Загружаем инфу о пользователе
-    const snap = await get(ref(db, "users/" + user.nick));
-    if (!snap.exists()) {
-      window.location.href = "index.html";
-    }
-    const fullUser = snap.val();
-
-    const container = document.getElementById("user-info");
 
     // Добавить SCP (для админов)
     window.addScp = async () => {
@@ -176,9 +118,6 @@
       const requiredLevel = parseInt(document.getElementById("scpLevel").value);
       const content = document.getElementById("scpContent").value.trim();
       if (!title || !content || !requiredLevel) return alert("Заполните все поля");
-      const btn = document.createElement("button");
-      
-      
 
       const newRef = push(ref(db, "scp"));
       await set(newRef, { title, requiredLevel, content, author: user.nick, createdAt: Date.now() });
@@ -192,19 +131,12 @@
     // Список SCP
     const entriesDiv = document.getElementById("entries");
     const searchInput = document.getElementById("search");
-      container.appendChild(select);
-      container.appendChild(btn);
-    }
 
     searchInput.oninput = () => {
       const q = searchInput.value.toLowerCase();
       Array.from(entriesDiv.children).forEach(link => {
         link.style.display = link.innerText.toLowerCase().includes(q) ? "block" : "none";
       });
-    // Выход
-    window.logout = () => {
-      localStorage.removeItem("user");
-      window.location.href = "index.html";
     };
 
     async function loadEntries() {
