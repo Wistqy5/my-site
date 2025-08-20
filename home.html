@@ -64,8 +64,7 @@
 
   <div id="content">
     <h1>☉ SCP Foundation</h1>
-
-    <!-- 🔹 Инфо о пользователе -->
+    
     <div id="userInfo"></div>
     <button id="logoutBtn" onclick="logout()">Выход</button>
 
@@ -93,39 +92,44 @@
     </div>
   </div>
 
-  <!-- 🔹 Firebase + Скрипт -->
   <script type="module">
-    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    import { getDatabase, ref, get, child, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 
-    // 🔧 Настройки Firebase
-  const firebaseConfig = {
-  apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
-  authDomain: "scp-foundation-45b20.firebaseapp.com",
-  databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com/",
-  projectId: "scp-foundation-45b20",
-  storageBucket: "scp-foundation-45b20.firebasestorage.app",
-  messagingSenderId: "383272466518",
-  appId: "1:383272466518:web:3225b8911a56c9d769e3f7",
-  measurementId: "G-G84NR3K9G2"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSy....", 
+      authDomain: "scp-foundation.firebaseapp.com",
+      databaseURL: "https://scp-foundation.firebaseio.com",
+      projectId: "scp-foundation",
+      storageBucket: "scp-foundation.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef"
+    };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    let currentUser = null;
+    let userLevel = 0;
+    let userRole = "Researcher";
 
-    if (!currentUser) {
-      window.location.href = "index.html"; // если не вошёл → редирект
+    // загрузка юзера из localStorage
+    const savedUser = JSON.parse(localStorage.getItem("currentUser"));
+    if (!savedUser) {
+      window.location.href = "index.html"; 
     } else {
-      document.getElementById("userInfo").innerHTML = 
-        `Добро пожаловать, <b>${currentUser.nick}</b><br>
-         Ваш уровень: <b>${currentUser.level}</b><br>
-         Ваша роль: <b>${currentUser.role || "Без роли"}</b>`;
-      
-      if (currentUser.level >= 4) {
+      currentUser = savedUser.nick;
+      userLevel = savedUser.level;
+      userRole = savedUser.role;
+      document.getElementById("userInfo").innerHTML = `
+        Добро пожаловать, ${currentUser}! <br>
+        Ваш уровень: ${userLevel} <br>
+        Ваша роль: ${userRole}
+      `;
+      if (userLevel >= 4) {
         document.getElementById("adminPanel").style.display = "block";
       }
+      loadEntries();
     }
 
     function logout() {
@@ -133,19 +137,47 @@
       window.location.href = "index.html";
     }
 
-    // 🔹 Обновление данных пользователей
-    window.updateUser = async function () {
+    async function updateUser() {
       const nick = document.getElementById("targetNick").value;
-      const newLevel = document.getElementById("newLevel").value;
-      const newRole = document.getElementById("newRole").value;
+      const level = parseInt(document.getElementById("newLevel").value);
+      const role = document.getElementById("newRole").value;
 
-      if (!nick) return alert("Введите ник!");
+      const snap = await get(child(ref(db), "users/" + nick));
+      if (!snap.exists()) { alert("Пользователь не найден!"); return; }
 
-      const userRef = ref(db, "users/" + nick);
-      await update(userRef, { level: newLevel, role: newRole });
-
-      alert("Данные обновлены для " + nick);
+      await update(ref(db, "users/" + nick), { level, role });
+      alert(`Пользователь ${nick} обновлён: Level ${level}, Role ${role}`);
     }
+
+    async function loadEntries() {
+      const snap = await get(child(ref(db), "scp"));
+      const entriesDiv = document.getElementById("entries");
+      entriesDiv.innerHTML = "";
+
+      if (!snap.exists()) {
+        entriesDiv.innerHTML = "Нет SCP записей";
+        return;
+      }
+
+      snap.forEach(childSnap => {
+        const data = childSnap.val();
+        const link = document.createElement("a");
+        link.href = `scp.html?id=${childSnap.key}`;
+        link.className = "scp-entry";
+        link.innerText = `${data.title} (Level ${data.requiredLevel})`;
+        entriesDiv.appendChild(link);
+      });
+
+      document.getElementById("search").addEventListener("input", function() {
+        const query = this.value.toLowerCase();
+        Array.from(entriesDiv.children).forEach(link => {
+          link.style.display = link.innerText.toLowerCase().includes(query) ? "block" : "none";
+        });
+      });
+    }
+
+    window.logout = logout;
+    window.updateUser = updateUser;
   </script>
 </body>
 </html>
