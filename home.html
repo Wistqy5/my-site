@@ -77,28 +77,7 @@
     <button id="logoutBtn" onclick="logout()" style="display:none;">Выход</button>
 
     <!-- 🔹 Админ панель -->
-    <div id="adminPanel" style="display:none;">
-      <h3>Административная панель</h3>
-      <input type="text" id="targetNick" placeholder="Ник пользователя"><br>
-      <label>Новый уровень:</label>
-      <select id="newLevel">
-        <option value="1">Level 1</option>
-        <option value="2">Level 2</option>
-        <option value="3">Level 3</option>
-        <option value="4">Level 4</option>
-        <option value="5">Level 5</option>
-      </select><br>
-      <label>Роль:</label>
-      <select id="newRole">
-        <option value="Researcher">Researcher</option>
-        <option value="Security">Security</option>
-        <option value="MTF">MTF</option>
-        <option value="Administrator">Administrator</option>
-        <option value="O5">O5 Council</option>
-      </select><br>
-      <button onclick="updateUser()">Обновить</button>
-    </div>
-  </div>
+    <div id="adminPanel" style="display:none;"> <h3>Административная панель</h3> <input type="text" id="targetNick" placeholder="Ник пользователя"><br> <label>Новый уровень:</label> <select id="newLevel"> <option value="1">Level 1</option> <option value="2">Level 2</option> <option value="3">Level 3</option> <option value="4">Level 4</option> <option value="5">Level 5</option> </select><br> <label>Роль:</label> <select id="newRole"> <option value="Researcher">Researcher</option> <option value="Security">Security</option> <option value="MTF">MTF</option> <option value="Administrator">Administrator</option> <option value="O5">O5 Council</option> </select><br> <button onclick="updateUser()">Обновить</button> </div> </div>
 
   <!-- 🔹 Firebase + Скрипт -->
   <script type="module">
