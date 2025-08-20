@@ -133,7 +133,7 @@
            Ваш уровень: <span style="color:#ff5555">${user.level}</span><br>
            Ваша роль: ${user.role}<br>
            Ваш сайт: ${user.site || "—"}<br>
-           ${user.role === "MTF" && user.unit ? "Подразделение: " + user.unit : ""}`;
+           ${user.role === "Mobile Task Force" && user.unit ? "Подразделение: " + user.unit : ""}`;
 
         // === ДОСТУП К СОЗДАНИЮ SCP ===
         if (
@@ -160,7 +160,7 @@
     window.toggleUnit = () => {
       const role = document.getElementById("newRole").value;
       const unitDiv = document.getElementById("unitDiv");
-      if (role === "MTF") {
+      if (role === "Mobile Task Force") {
         unitDiv.style.display = "block";
       } else {
         unitDiv.style.display = "none";
@@ -179,7 +179,7 @@
       const snap = await get(uref);
       if (!snap.exists()) return alert("Пользователь не найден");
       await update(uref, { level, role, site, unit });
-      alert(`Пользователь ${nick} обновлён: Level ${level}, Role ${role}, Site ${site}${role === "MTF" ? ", Unit " + unit : ""}`);
+      alert(`Пользователь ${nick} обновлён: Level ${level}, Role ${role}, Site ${site}${role === "Mobile Task Force" ? ", Unit " + unit : ""}`);
     };
 
     window.showStats = async () => {
@@ -194,7 +194,7 @@
         <b>Уровень:</b> ${u.level}<br>
         <b>Роль:</b> ${u.role}<br>
         <b>Сайт:</b> ${u.site || "—"}<br>
-        ${u.role === "MTF" && u.unit ? "<b>Подразделение:</b> " + u.unit + "<br>" : ""}
+        ${u.role === "Mobile Task Force" && u.unit ? "<b>Подразделение:</b> " + u.unit + "<br>" : ""}
         <b>Дата регистрации:</b> ${u.createdAt ? new Date(u.createdAt).toLocaleString() : "—"}<br>
       `;
     };
