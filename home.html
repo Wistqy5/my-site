@@ -39,6 +39,7 @@
     <div id="adminPanel" class="panel" style="display:none;">
       <h3>Административная панель</h3>
       <input type="text" id="targetNick" placeholder="Ник пользователя">
+
       <label>Новый уровень:</label>
       <select id="newLevel">
         <option value="none">Level none</option>
@@ -51,8 +52,9 @@
         <option value="6">Level Omni</option>
         <option value="7">Level Omni+</option>
       </select>
+
       <label>Роль:</label>
-      <select id="newRole" onchange="toggleUnit()">
+      <select id="newRole">
         <option value="Class-D">Class-D</option>
         <option value="Researcher">Researcher</option>
         <option value="Security Department">Security Department</option>
@@ -62,24 +64,22 @@
         <option value="The Administrator">The Administrator</option>
         <option value="Office of The Administrator">Office of The Administrator</option>
       </select>
+
+      <!-- Динамическое поле "подкласс / подразделение / номер O5" -->
       <div id="unitDiv" style="display:none;">
-        <label>Подразделение:</label>
-        <select id="newUnit">
-          <option value="">—</option>
-          <option value="Alpha-1">Альфа-1</option>
-          <option value="Beta-7">Бета-7</option>
-          <option value="Epsilon-11">Епсилон-11</option>
-          <option value="Nu-7">Ну-7</option>
-          <option value="Eta-10">Эта-10</option>
-        </select>
+        <label id="unitLabel">Подразделение:</label>
+        <select id="newUnit"></select>
       </div>
+
       <label>Сайт:</label>
       <select id="newSite">
-        <option value="Site-17">Site-01</option>
-        <option value="Site-19">Site-02</option>
-        <option value="Site-82">Site-03</option>
+        <option value="Site-17">Site-17</option>
+        <option value="Site-19">Site-19</option>
+        <option value="Site-82">Site-82</option>
+        <option value="Area-12">Area-12</option>
         <option value="Site-██">Site-██</option>
       </select>
+
       <button onclick="updateUser()">Обновить</button>
     </div>
 
@@ -106,7 +106,7 @@
     import { getDatabase, ref, set, get, update, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
+      apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnЗlKQV6BJLIo",
       authDomain: "scp-foundation-45b20.firebaseapp.com",
       databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com/",
       projectId: "scp-foundation-45b20",
@@ -117,6 +117,27 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+
+    // === Маппинг подклассов/подразделений по ролям ===
+    const roleSubOptions = {
+      "Class-D": ["D-Class", "Test Subject", "Probationary"],
+      "Researcher": ["Junior Researcher", "Researcher", "Senior Researcher", "Doctor", "Chief Researcher"],
+      "Security Department": ["Cadet", "Security Officer", "Sergeant", "Lieutenant", "Captain", "Chief of Security"],
+      "Mobile Task Force": ["Alpha-1", "Beta-7", "Epsilon-11", "Nu-7", "Eta-10", "Tau-5"],
+      "Administrative Department": ["Assistant", "Manager", "Deputy Director", "Site Director", "Regional Director"],
+      "O5": Array.from({length:13}, (_,i)=>`O5-${i+1}`)
+      // "The Administrator" и "Office of The Administrator" — без подклассов
+    };
+
+    // Подписи для поля "unit" в зависимости от роли
+    const roleUnitLabels = {
+      "Class-D": "Класс/статус:",
+      "Researcher": "Ранг исследователя:",
+      "Security Department": "Звание охраны:",
+      "Mobile Task Force": "Подразделение MTF:",
+      "Administrative Department": "Должность:",
+      "O5": "Номер члена Совета O5:"
+    };
 
     let user = JSON.parse(localStorage.getItem("user") || "null");
     if (!user) window.location.href = "index.html";
@@ -132,12 +153,12 @@
           `<b>Добро пожаловать, ${user.nick}!</b><br>
            Ваш уровень: <span style="color:#ff5555">${user.level}</span><br>
            Ваша роль: ${user.role}<br>
-           Ваш сайт: ${user.site || "—"}<br>
-           ${user.role === "Mobile Task Force" && user.unit ? "Подразделение: " + user.unit : ""}`;
+           ${user.unit ? `${(roleUnitLabels[user.role] || "Подразделение")}: ${user.unit}<br>` : ""}
+           Ваш сайт: ${user.site || "—"}`;
 
-        // === ДОСТУП К СОЗДАНИЮ SCP ===
+        // Создавать SCP могут: Researcher с уровнем >3, а также высшее руководство
         if (
-          (user.role === "Researcher" && user.level > 3) ||
+          (user.role === "Researcher" && Number(user.level) > 3) ||
           user.role === "O5" ||
           user.role === "The Administrator" ||
           user.role === "Office of The Administrator"
@@ -145,60 +166,102 @@
           document.getElementById("addScpPanel").style.display = "block";
         }
 
-        // === ДОСТУП К АДМИН-ПАНЕЛИ И ПРОСМОТРУ ===
+        // Админ-доступ (уровень >= 4)
         if (Number(user.level) >= 4) {
           document.getElementById("adminPanel").style.display = "block";
           document.getElementById("statsPanel").style.display = "block";
         }
       }
     }
-
     loadUserInfo();
 
+    // Выход
     window.logout = () => { localStorage.removeItem("user"); window.location.href = "index.html"; };
 
-    window.toggleUnit = () => {
-      const role = document.getElementById("newRole").value;
-      const unitDiv = document.getElementById("unitDiv");
-      if (role === "Mobile Task Force") {
-        unitDiv.style.display = "block";
-      } else {
-        unitDiv.style.display = "none";
-        document.getElementById("newUnit").value = "";
-      }
-    };
+    // Динамическое отображение/заполнение подклассов
+    const roleSelect = document.getElementById("newRole");
+    const unitDiv = document.getElementById("unitDiv");
+    const unitLabel = document.getElementById("unitLabel");
+    const unitSelect = document.getElementById("newUnit");
 
+    roleSelect.addEventListener("change", () => {
+      const role = roleSelect.value;
+      updateUnitField(role);
+    });
+
+    function updateUnitField(role) {
+      const options = roleSubOptions[role];
+      // Роли без подклассов
+      if (!options) {
+        unitDiv.style.display = "none";
+        unitSelect.innerHTML = "";
+        return;
+      }
+      // Показать и наполнить варианты
+      unitDiv.style.display = "block";
+      unitLabel.textContent = roleUnitLabels[role] || "Подразделение:";
+      unitSelect.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "—";
+      unitSelect.appendChild(placeholder);
+      options.forEach(opt => {
+        const o = document.createElement("option");
+        o.value = opt;
+        o.textContent = opt;
+        unitSelect.appendChild(o);
+      });
+    }
+    // Инициализировать при загрузке (на случай если админ сразу щёлкает «Обновить»)
+    updateUnitField(roleSelect.value);
+
+    // Обновление пользователя
     window.updateUser = async () => {
       const nick = document.getElementById("targetNick").value.trim();
-      const level = parseInt(document.getElementById("newLevel").value);
-      const role = document.getElementById("newRole").value;
+      const level = document.getElementById("newLevel").value === "none"
+        ? "none"
+        : parseInt(document.getElementById("newLevel").value);
+      const role = roleSelect.value;
       const site = document.getElementById("newSite").value;
-      const unit = document.getElementById("newUnit").value;
+
       if (!nick) return alert("Введите ник пользователя");
+
+      // Если у роли нет подклассов — очищаем unit, иначе берём выбранный
+      let unit = "";
+      if (roleSubOptions[role]) {
+        unit = unitSelect.value || "";
+      }
+
       const uref = ref(db, "users/" + nick);
       const snap = await get(uref);
       if (!snap.exists()) return alert("Пользователь не найден");
+
       await update(uref, { level, role, site, unit });
-      alert(`Пользователь ${nick} обновлён: Level ${level}, Role ${role}, Site ${site}${role === "Mobile Task Force" ? ", Unit " + unit : ""}`);
+      alert(`Пользователь ${nick} обновлён: Level ${level}, Role ${role}, ${unit ? (roleUnitLabels[role] || "Unit") + " " + unit + ", " : ""}Site ${site}`);
     };
 
+    // Просмотр статистики
     window.showStats = async () => {
       const nick = document.getElementById("statsNick").value.trim();
       if (!nick) return alert("Введите ник");
       const uref = ref(db, "users/" + nick);
       const snap = await get(uref);
-      if (!snap.exists()) return document.getElementById("userStats").innerHTML = "❌ Пользователь не найден";
+      if (!snap.exists()) {
+        document.getElementById("userStats").innerHTML = "❌ Пользователь не найден";
+        return;
+      }
       const u = snap.val();
       document.getElementById("userStats").innerHTML = `
         <b>Ник:</b> ${nick}<br>
         <b>Уровень:</b> ${u.level}<br>
         <b>Роль:</b> ${u.role}<br>
+        ${u.unit ? `<b>${roleUnitLabels[u.role] || "Подразделение"}:</b> ${u.unit}<br>` : ""}
         <b>Сайт:</b> ${u.site || "—"}<br>
-        ${u.role === "Mobile Task Force" && u.unit ? "<b>Подразделение:</b> " + u.unit + "<br>" : ""}
         <b>Дата регистрации:</b> ${u.createdAt ? new Date(u.createdAt).toLocaleString() : "—"}<br>
       `;
     };
 
+    // Добавление SCP
     window.addScp = async () => {
       const title = document.getElementById("scpTitle").value.trim();
       const requiredLevel = parseInt(document.getElementById("scpLevel").value);
@@ -214,6 +277,7 @@
       document.getElementById("scpContent").value = "";
     };
 
+    // Список SCP + поиск
     const entriesDiv = document.getElementById("entries");
     const searchInput = document.getElementById("search");
 
@@ -228,7 +292,7 @@
       entriesDiv.innerHTML = "Загрузка…";
       const snap = await get(ref(db, "scp"));
       entriesDiv.innerHTML = "";
-      if (!snap.exists()) return entriesDiv.innerHTML = "Нет SCP записей";
+      if (!snap.exists()) { entriesDiv.innerHTML = "Нет SCP записей"; return; }
       snap.forEach(ch => {
         const d = ch.val();
         const a = document.createElement("a");
