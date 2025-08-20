@@ -1,75 +1,68 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>SCP Foundation</title>
+  <meta charset="UTF-8" />
+  <title>Главная | SCP Foundation</title>
   <style>
-    body { background:#0d0d0d; color:#f5f5f5; font-family:Segoe UI, Arial, sans-serif; display:flex; height:100vh; margin:0; }
-    #sidebar { width:280px; background:#161616; padding:20px; border-right:2px solid #222; overflow-y:auto; }
-    #sidebar h3 { margin:0 0 10px; font-size:18px; border-bottom:1px solid #333; padding-bottom:8px; }
-    .scp-entry { display:block; padding:8px; margin:6px 0; border-radius:6px; color:#ccc; text-decoration:none; }
-    .scp-entry:hover { background:#222; color:#fff; }
-    #content { flex:1; padding:30px; overflow-y:auto; }
-    h1 { margin:0 0 15px; font-size:26px; color:#e0e0e0; }
-    #userInfo, .panel { background:#1c1c1c; padding:18px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.4); margin-bottom:22px; }
-    input, select, textarea { width:100%; padding:10px; margin:8px 0; border:1px solid #333; border-radius:8px; background:#111; color:#eee; }
-    input:focus, select:focus, textarea:focus { border-color:#c62828; outline:none; }
-    button { width:100%; padding:10px; border:0; border-radius:8px; background:#c62828; color:white; font-weight:600; cursor:pointer; }
-    button:hover { background:#e53935; }
-    #logoutBtn { background:#444; }
-    #logoutBtn:hover { background:#666; }
-    #logo { width:28px; height:28px; vertical-align:-6px; border-radius:0; margin-right:8px; }
+    body {
+      background:#0d0d0d;
+      color:#eee;
+      font-family:Segoe UI, Arial, sans-serif;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      margin:0;
+    }
+    .box {
+      width:340px; /* сделал поуже */
+      background:#1a1a1a;
+      border-radius:14px;
+      padding:22px;
+      box-shadow:0 8px 24px rgba(0,0,0,.45);
+    }
+    h2 {
+      margin:0 0 14px;
+      font-weight:600;
+    }
+    p {
+      margin:6px 0;
+    }
+    select, button {
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      border-radius:8px;
+      border:0;
+      font-size:14px;
+    }
+    select {
+      background:#111;
+      color:#eee;
+    }
+    button {
+      background:#c62828;
+      color:#fff;
+      font-weight:600;
+      cursor:pointer;
+    }
+    button:hover {
+      background:#e53935;
+    }
   </style>
 </head>
 <body>
-  <div id="sidebar">
-    <h3>Поиск SCP</h3>
-    <input type="text" id="search" placeholder="Поиск...">
-    <div id="entries">Нет SCP записей</div>
-  </div>
-
-  <div id="content">
-    <h1><img id="logo" src="logo.png" alt="">SCP Foundation</h1>
-
-    <div id="userInfo"></div>
-    <button id="logoutBtn" onclick="logout()">Выйти</button>
-
-    <div id="adminPanel" class="panel" style="display:none;">
-      <h3>Административная панель</h3>
-      <input type="text" id="targetNick" placeholder="Ник пользователя">
-      <label>Новый уровень:</label>
-      <select id="newLevel">
-        <option value="0">Level 0</option>
-        <option value="1">Level 1</option><option value="2">Level 2</option>
-        <option value="3">Level 3</option><option value="4">Level 4</option><option value="5">Level 5</option>
-        <option value="6">Level Omni</option>
-        <option value="7">Level Omni+</option>
-      </select>
-      <label>Роль:</label>
-      <select id="newRole">
-        <option value="Class-D">Class-D</option>
-        <option value="Researcher">Researcher</option><option value="Security Department">Security Department</option>
-        <option value="MTF">MTF</option><option value="Administrative Department">Administrative Department</option>
-        <option value="O5">O5 Council</option>
-        <option value="The Administrator">The Administrator</option>
-        <option value="Office of The Administrator">Office of The Administrator</option>
-      </select>
-      <button onclick="updateUser()">Обновить</button>
-    </div>
-
-    <div id="addScpPanel" class="panel" style="display:none;">
-      <h3>Добавить SCP</h3>
-      <input type="text" id="scpTitle" placeholder="Название SCP">
-      <input type="number" id="scpLevel" placeholder="Требуемый уровень">
-      <textarea id="scpContent" placeholder="Описание"></textarea>
-      <button onclick="addScp()">Добавить</button>
-    </div>
+  <div class="box">
+    <h2>SCP Foundation — Панель</h2>
+    <div id="user-info"></div>
+    <button onclick="logout()">Выйти</button>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getDatabase, ref, set, get, update, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
       authDomain: "scp-foundation-45b20.firebaseapp.com",
@@ -83,76 +76,54 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Текущий пользователь
-    const user = JSON.parse(localStorage.getItem("user") || "null");
-    if (!user) window.location.href = "index.html";
-
-    document.getElementById("userInfo").innerHTML =
-      `<b>Добро пожаловать, ${user.nick}!</b><br>Ваш уровень: <span style="color:#ff5555">${user.level}</span><br>Ваша роль: ${user.role}`;
-
-    if (Number(user.level) >= 4) {
-      document.getElementById("adminPanel").style.display = "block";
-      document.getElementById("addScpPanel").style.display = "block";
+    // Проверяем вход
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) {
+      window.location.href = "index.html";
     }
 
-    // Выйти
-    window.logout = () => { localStorage.removeItem("user"); window.location.href = "index.html"; };
-
-    // Обновить пользователя (для админов)
-    window.updateUser = async () => {
-      const nick = document.getElementById("targetNick").value.trim();
-      const level = parseInt(document.getElementById("newLevel").value);
-      const role = document.getElementById("newRole").value;
-      if (!nick) return alert("Введите ник пользователя");
-      const uref = ref(db, "users/" + nick);
-      const snap = await get(uref);
-      if (!snap.exists()) return alert("Пользователь не найден");
-      await update(uref, { level, role });
-      alert(`Пользователь ${nick} обновлён: Level ${level}, Role ${role}`);
-    };
-
-    // Добавить SCP (для админов)
-    window.addScp = async () => {
-      const title = document.getElementById("scpTitle").value.trim();
-      const requiredLevel = parseInt(document.getElementById("scpLevel").value);
-      const content = document.getElementById("scpContent").value.trim();
-      if (!title || !content || !requiredLevel) return alert("Заполните все поля");
-
-      const newRef = push(ref(db, "scp"));
-      await set(newRef, { title, requiredLevel, content, author: user.nick, createdAt: Date.now() });
-      alert("SCP добавлен");
-      loadEntries();
-      document.getElementById("scpTitle").value = "";
-      document.getElementById("scpLevel").value = "";
-      document.getElementById("scpContent").value = "";
-    };
-
-    // Список SCP
-    const entriesDiv = document.getElementById("entries");
-    const searchInput = document.getElementById("search");
-
-    searchInput.oninput = () => {
-      const q = searchInput.value.toLowerCase();
-      Array.from(entriesDiv.children).forEach(link => {
-        link.style.display = link.innerText.toLowerCase().includes(q) ? "block" : "none";
-      });
-    };
-
-    async function loadEntries() {
-      entriesDiv.innerHTML = "Загрузка…";
-      const snap = await get(ref(db, "scp"));
-      entriesDiv.innerHTML = "";
-      if (!snap.exists()) return entriesDiv.innerHTML = "Нет SCP записей";
-      snap.forEach(ch => {
-        const d = ch.val();
-        const a = document.createElement("a");
-        a.href = `scp.html?id=${ch.key}`;
-        a.className = "scp-entry";
-        a.textContent = `${d.title} (Level ${d.requiredLevel})`;
-        entriesDiv.appendChild(a);
-      });
+    // Загружаем инфу о пользователе
+    const snap = await get(ref(db, "users/" + user.nick));
+    if (!snap.exists()) {
+      window.location.href = "index.html";
     }
-    loadEntries();
+    const fullUser = snap.val();
+
+    const container = document.getElementById("user-info");
+    container.innerHTML = `
+      <p><b>Ник:</b> ${user.nick}</p>
+      <p><b>Уровень:</b> ${fullUser.level}</p>
+      <p><b>Роль:</b> ${fullUser.role}</p>
+      <p><b>Site:</b> ${fullUser.site || "Не назначен"}</p>
+    `;
+
+    // Если уровень > 3, разрешаем менять Site
+    if (fullUser.level > 3) {
+      const select = document.createElement("select");
+      ["Site-17", "Site-82", "Site-19", "Site-12"].forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s; opt.textContent = s;
+        if (fullUser.site === s) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      const btn = document.createElement("button");
+      btn.textContent = "Изменить сайт";
+      btn.onclick = async () => {
+        await update(ref(db, "users/" + user.nick), { site: select.value });
+        alert("Сайт изменён на " + select.value);
+        location.reload();
+      };
+
+      container.appendChild(select);
+      container.appendChild(btn);
+    }
+
+    // Выход
+    window.logout = () => {
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+    };
   </script>
 </body>
 </html>
