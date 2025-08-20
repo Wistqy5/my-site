@@ -4,56 +4,82 @@
   <meta charset="UTF-8">
   <title>Мой SCP-Архив</title>
   <style>
-    /* Базовые стили */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0 1rem;
       transition: background .3s, color .3s;
     }
+
     [data-theme="light"] {
       background: #f5f5f5;
       color: #222;
     }
+
     [data-theme="dark"] {
       background: #222;
       color: #f5f5f5;
     }
-    .hidden { display: none; }
-    button { margin: .25rem; padding: .5rem 1rem; }
+
+    .hidden {
+      display: none;
+    }
+
+    button {
+      margin: .25rem;
+      padding: .5rem 1rem;
+      cursor: pointer;
+    }
+
+    /* Модалка */
     #scp-modal {
-      position: fixed; top: 0; left: 0;
+      position: fixed;
+      top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,.6);
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     #scp-modal .box {
-      background: white; color: black;
-      padding: 1rem; border-radius: 4px;
-      max-width: 400px; width: 90%;
+      background: white;
+      color: black;
+      padding: 1rem;
+      border-radius: 4px;
+      max-width: 400px;
+      width: 90%;
       position: relative;
     }
     #scp-modal .close {
-      position: absolute; top: .5rem; right: .5rem;
-      cursor: pointer; font-size: 1.2rem;
+      position: absolute;
+      top: .5rem; right: .5rem;
+      font-size: 1.2rem;
+      cursor: pointer;
     }
+
+    /* Тема тёмной модалки */
     [data-theme="dark"] #scp-modal .box {
-      background: #333; color: #eee;
+      background: #333;
+      color: #eee;
     }
+
+    /* Кнопка переключения темы */
     #theme-toggle {
-      position: fixed; top: 1rem; right: 1rem;
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
     }
   </style>
 </head>
 <body data-theme="light">
 
-  <!-- Переключатель темы -->
+  <!-- Кнопка переключения темы -->
   <button id="theme-toggle">🌙 / ☀️</button>
 
   <!-- Блок авторизации -->
   <div id="auth" class="hidden"></div>
 
-  <!-- Основной архив -->
+  <!-- Основной архив (список SCP) -->
   <div id="archive" class="hidden">
     <h1>Список SCP</h1>
     <div id="scp-list"></div>
@@ -68,125 +94,119 @@
     </div>
   </div>
 
-  <!-- Встроенный JS -->
+  <!-- Встроенный JavaScript -->
   <script>
-  ;(function() {
-    const IDS = {
-      auth: 'auth',
-      archive: 'archive',
-      list: 'scp-list',
-      modal: 'scp-modal',
-      themeToggle: 'theme-toggle'
+  document.addEventListener("DOMContentLoaded", () => {
+    const IDs = {
+      auth: "auth",
+      archive: "archive",
+      list: "scp-list",
+      modal: "scp-modal",
+      themeToggle: "theme-toggle"
     };
     let currentUser = null;
 
-    /* Утилиты */
     function $(id) { return document.getElementById(id); }
-    function show(el) { el && el.classList.remove('hidden'); }
-    function hide(el) { el && el.classList.add('hidden'); }
+    function show(el) { el && el.classList.remove("hidden"); }
+    function hide(el) { el && el.classList.add("hidden"); }
 
-    /* Тема */
+    // 1. Переключение темы и сохранение в localStorage
     function setTheme(t) {
       document.body.dataset.theme = t;
-      localStorage.setItem('theme', t);
-    }
-    function loadTheme() {
-      setTheme(localStorage.getItem('theme') || 'light');
+      localStorage.setItem("theme", t);
     }
     function initThemeToggle() {
-      const btn = $(IDS.themeToggle);
-      btn.addEventListener('click', () => {
-        setTheme(document.body.dataset.theme === 'light' ? 'dark' : 'light');
+      const btn = $(IDs.themeToggle);
+      const saved = localStorage.getItem("theme");
+      setTheme(saved === "dark" ? "dark" : "light");
+      btn.addEventListener("click", () => {
+        setTheme(document.body.dataset.theme === "dark" ? "light" : "dark");
       });
     }
 
-    /* Авторизация */
-    function authenticate(u, p) {
-      // Пример «фэйкового» логина
-      return u === 'admin' && p === 'password'
-        ? { name:'Admin', level:5 }
+    // 2. Пример «авторизации»
+    function authenticate(user, pass) {
+      return user === "admin" && pass === "password"
+        ? { name: "Admin", level: 5 }
         : null;
     }
     function handleLogin(e) {
       e.preventDefault();
-      const f = e.target;
-      const user = authenticate(f.username.value.trim(), f.password.value);
-      if (user) {
-        currentUser = user;
-        renderUI();
-      } else {
-        alert('Неверный логин/пароль');
-      }
+      const form = e.target;
+      const user = authenticate(form.username.value.trim(), form.password.value);
+      if (!user) return alert("Неверный логин или пароль");
+      currentUser = user;
+      renderUI();
     }
     function createLoginForm() {
-      const f = document.createElement('form');
-      f.innerHTML = `
+      const form = document.createElement("form");
+      form.innerHTML = `
         <label>Логин: <input name="username" required></label><br>
         <label>Пароль: <input type="password" name="password" required></label><br>
         <button>Войти</button>
       `;
-      f.addEventListener('submit', handleLogin);
-      return f;
+      form.addEventListener("submit", handleLogin);
+      return form;
     }
 
-    /* Данные SCP */
+    // 3. Данные SCP и рендер списка
     function loadSCPList() {
       return [
-        {id:1, title:'SCP-001', level:1, desc:'Описание SCP-001'},
-        {id:2, title:'SCP-173', level:2, desc:'Описание SCP-173'},
-        {id:3, title:'SCP-682', level:5, desc:'Описание SCP-682'},
-        {id:4, title:'SCP-999', level:1, desc:'Описание SCP-999'}
+        { id:1, title:"SCP-001", level:1, desc:"Описание SCP-001" },
+        { id:2, title:"SCP-173", level:2, desc:"Описание SCP-173" },
+        { id:3, title:"SCP-682", level:5, desc:"Описание SCP-682" },
+        { id:4, title:"SCP-999", level:1, desc:"Описание SCP-999" }
       ];
     }
     function renderSCPList() {
-      const container = $(IDS.list);
-      container.innerHTML = '';
+      const container = $(IDs.list);
+      container.innerHTML = "";
       loadSCPList().forEach(item => {
-        const btn = document.createElement('button');
+        const btn = document.createElement("button");
         btn.textContent = item.title;
         btn.disabled = currentUser.level < item.level;
-        btn.onclick = () => showSCP(item);
+        btn.onclick = () => openModal(item);
         container.appendChild(btn);
       });
     }
 
-    /* Модалка */
-    function showSCP(item) {
-      const m = $(IDS.modal);
-      m.querySelector('.title').textContent = item.title;
-      m.querySelector('.description').textContent = item.desc;
-      show(m);
+    // 4. Модальное окно
+    function openModal(item) {
+      const modal = $(IDs.modal);
+      modal.querySelector(".title").textContent       = item.title;
+      modal.querySelector(".description").textContent = item.desc;
+      show(modal);
     }
     function initModal() {
-      const m = $(IDS.modal);
-      m.querySelector('.close').onclick = () => hide(m);
+      const modal = $(IDs.modal);
+      modal.querySelector(".close").onclick = () => hide(modal);
+      modal.addEventListener("click", e => {
+        if (e.target === modal) hide(modal);
+      });
     }
 
-    /* Отрисовка UI */
+    // 5. Основная отрисовка интерфейса
     function renderUI() {
-      const auth = $(IDS.auth);
-      const arch = $(IDS.archive);
+      const authBlock = $(IDs.auth);
+      const archive   = $(IDs.archive);
 
       if (!currentUser) {
-        hide(arch);
-        auth.innerHTML = '';
-        auth.appendChild(createLoginForm());
-        show(auth);
+        hide(archive);
+        authBlock.innerHTML = "";
+        authBlock.appendChild(createLoginForm());
+        show(authBlock);
       } else {
-        hide(auth);
-        show(arch);
+        hide(authBlock);
+        show(archive);
         renderSCPList();
       }
     }
 
-    /* Старт */
-    document.addEventListener('DOMContentLoaded', () => {
-      loadTheme();
-      initThemeToggle();
-      initModal();
-      renderUI();
-    });
-  })();
+    // Запуск всего
+    initThemeToggle();
+    initModal();
+    renderUI();
+  });
   </script>
 
 </body>
