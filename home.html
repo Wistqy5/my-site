@@ -1,129 +1,203 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Главная | SCP Foundation</title>
+  <meta charset="UTF-8">
+  <title>SCP Foundation — Вход</title>
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
     body {
-      background:#0d0d0d;
-      color:#eee;
-      font-family:Segoe UI, Arial, sans-serif;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-      margin:0;
+      background: #0d0d0d;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #fff;
     }
+
     .box {
-      width:340px; /* сделал поуже */
-      background:#1a1a1a;
-      border-radius:14px;
-      padding:22px;
-      box-shadow:0 8px 24px rgba(0,0,0,.45);
+      background: #1a1a1a;
+      padding: 20px;
+      border-radius: 12px;
+      width: 320px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
     }
-    h2 {
-      margin:0 0 14px;
-      font-weight:600;
+
+    .box h2 {
+      display: flex;
+      align-items: center;
+      font-size: 20px;
+      margin-bottom: 10px;
     }
-    p {
-      margin:6px 0;
+
+    .box h2 img {
+      width: 28px;
+      height: 28px;
+      margin-right: 8px;
     }
-    select, button {
-      width:100%;
-      padding:10px;
-      margin-top:10px;
-      border-radius:8px;
-      border:0;
-      font-size:14px;
+
+    .muted {
+      color: #aaa;
+      font-size: 13px;
+      margin-bottom: 15px;
     }
-    select {
-      background:#111;
-      color:#eee;
+
+    .tabs {
+      display: flex;
+      margin-bottom: 15px;
     }
-    button {
-      background:#c62828;
-      color:#fff;
-      font-weight:600;
-      cursor:pointer;
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 8px 0;
+      cursor: pointer;
+      background: #222;
+      border-radius: 6px 6px 0 0;
+      transition: background 0.3s;
     }
-    button:hover {
-      background:#e53935;
+
+    .tab.active {
+      background: #b71c1c;
+    }
+
+    label {
+      font-size: 14px;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .box input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background: #111;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .box button {
+      width: 100%;
+      padding: 10px;
+      background: #b71c1c;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .box button:hover {
+      background: #d32f2f;
+    }
+
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
   <div class="box">
-    <h2>SCP Foundation — Панель</h2>
-    <div id="user-info"></div>
-    <button onclick="logout()">Выйти</button>
+    <h2><img id="logo" src="logo.png" alt="">SCP Foundation</h2>
+    <div class="muted">Доступ только для авторизованного персонала.</div>
+
+    <div class="tabs">
+      <div id="tab-login" class="tab active" onclick="switchTab('login')">Войти</div>
+      <div id="tab-reg" class="tab" onclick="switchTab('reg')">Регистрация</div>
+    </div>
+
+    <!-- Форма входа -->
+    <div id="form-login">
+      <label>Ник</label>
+      <input id="loginNick" type="text" placeholder="Ник">
+      <label>Пароль</label>
+      <input id="loginPass" type="password" placeholder="Пароль">
+      <button onclick="login()">Войти</button>
+    </div>
+
+    <!-- Форма регистрации -->
+    <div id="form-reg" class="hidden">
+      <label>Ник</label>
+      <input id="regNick" type="text" placeholder="Придумайте ник">
+      <label>Пароль</label>
+      <input id="regPass" type="password" placeholder="Минимум 4 символа">
+      <button onclick="register()">Зарегистрироваться</button>
+      <div class="muted" style="margin-top:8px;">
+        Будут назначены: уровень 1, роль Researcher.
+      </div>
+    </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+  <script>
+    // Переключение вкладок
+    function switchTab(tab) {
+      document.getElementById("form-login").classList.add("hidden");
+      document.getElementById("form-reg").classList.add("hidden");
+      document.getElementById("tab-login").classList.remove("active");
+      document.getElementById("tab-reg").classList.remove("active");
 
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
-      authDomain: "scp-foundation-45b20.firebaseapp.com",
-      databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com/",
-      projectId: "scp-foundation-45b20",
-      storageBucket: "scp-foundation-45b20.appspot.com",
-      messagingSenderId: "383272466518",
-      appId: "1:383272466518:web:3225b8911a56c9d769e3f7"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // Проверяем вход
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) {
-      window.location.href = "index.html";
+      if (tab === "login") {
+        document.getElementById("form-login").classList.remove("hidden");
+        document.getElementById("tab-login").classList.add("active");
+      } else {
+        document.getElementById("form-reg").classList.remove("hidden");
+        document.getElementById("tab-reg").classList.add("active");
+      }
     }
 
-    // Загружаем инфу о пользователе
-    const snap = await get(ref(db, "users/" + user.nick));
-    if (!snap.exists()) {
-      window.location.href = "index.html";
-    }
-    const fullUser = snap.val();
+    // Регистрация
+    function register() {
+      const nick = document.getElementById("regNick").value.trim();
+      const pass = document.getElementById("regPass").value.trim();
 
-    const container = document.getElementById("user-info");
-    container.innerHTML = `
-      <p><b>Ник:</b> ${user.nick}</p>
-      <p><b>Уровень:</b> ${fullUser.level}</p>
-      <p><b>Роль:</b> ${fullUser.role}</p>
-      <p><b>Site:</b> ${fullUser.site || "Не назначен"}</p>
-    `;
+      if (nick.length < 3 || pass.length < 4) {
+        alert("Ник ≥3 символов, пароль ≥4 символов!");
+        return;
+      }
 
-    // Если уровень > 3, разрешаем менять Site
-    if (fullUser.level > 3) {
-      const select = document.createElement("select");
-      ["Site-17", "Site-82", "Site-19", "Site-12"].forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = s; opt.textContent = s;
-        if (fullUser.site === s) opt.selected = true;
-        select.appendChild(opt);
-      });
+      if (localStorage.getItem("user_" + nick)) {
+        alert("Такой пользователь уже существует!");
+        return;
+      }
 
-      const btn = document.createElement("button");
-      btn.textContent = "Изменить сайт";
-      btn.onclick = async () => {
-        await update(ref(db, "users/" + user.nick), { site: select.value });
-        alert("Сайт изменён на " + select.value);
-        location.reload();
-      };
+      const userData = { password: pass, level: 1, role: "Researcher" };
+      localStorage.setItem("user_" + nick, JSON.stringify(userData));
 
-      container.appendChild(select);
-      container.appendChild(btn);
+      alert("Регистрация успешна! Теперь войдите.");
+      switchTab("login");
     }
 
-    // Выход
-    window.logout = () => {
-      localStorage.removeItem("user");
-      window.location.href = "index.html";
-    };
+    // Вход
+    function login() {
+      const nick = document.getElementById("loginNick").value.trim();
+      const pass = document.getElementById("loginPass").value.trim();
+
+      const saved = localStorage.getItem("user_" + nick);
+      if (!saved) {
+        alert("Пользователь не найден!");
+        return;
+      }
+
+      const userData = JSON.parse(saved);
+      if (userData.password !== pass) {
+        alert("Неверный пароль!");
+        return;
+      }
+
+      // сохраняем текущего пользователя
+      localStorage.setItem("currentUser", nick);
+
+      // редирект на домашнюю страницу
+      window.location.href = "home.html";
+    }
   </script>
 </body>
 </html>
