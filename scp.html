@@ -2,50 +2,26 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>SCP Document</title>
+  <title>SCP Foundation - Просмотр</title>
   <style>
-    body { background:#0d0d0d; color:#f0f0f0; font-family:Arial; padding:20px; }
-    #scpContainer { max-width:600px; margin:auto; }
-    .hidden { display:none; }
-    button { margin:5px; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; background:#333; color:white; }
-    button:hover { background:#555; }
-    textarea, input, select { width:100%; margin:5px 0; padding:6px; background:#1a1a1a; border:1px solid #444; color:#f0f0f0; }
+    body { background:#111; color:#eee; font-family:Arial; padding:20px; }
+    button { margin:5px; padding:6px 10px; border:none; border-radius:4px; background:#222; color:white; cursor:pointer; }
+    button:hover { background:#444; }
+    textarea { width:100%; height:150px; display:none; background:#1a1a1a; color:#eee; border:none; border-radius:5px; padding:10px; }
   </style>
 </head>
 <body>
-  <a href="index.html" style="color:#0ff;">← Назад к списку</a>
-  <div id="scpContainer">
-    <h1 id="scpTitle"></h1>
-    <p id="scpText"></p>
-    <p><b>Требуемый уровень доступа:</b> <span id="scpLevel"></span></p>
-    <p><b>Автор:</b> <span id="scpAuthor"></span></p>
-
-    <div id="editSection" class="hidden">
-      <h3>Редактировать SCP</h3>
-      <input type="text" id="editTitle">
-      <textarea id="editText"></textarea>
-      <select id="editLevel">
-        <option value="1">Level 1</option>
-        <option value="2">Level 2</option>
-        <option value="3">Level 3</option>
-        <option value="4">Level 4</option>
-        <option value="5">Level 5</option>
-      </select><br>
-      <button onclick="saveEdit()">💾 Сохранить</button>
-      <button onclick="cancelEdit()">❌ Отмена</button>
-    </div>
-
-    <div id="actionBtns" class="hidden">
-      <button onclick="showEdit()">✏ Редактировать</button>
-      <button onclick="deleteSCP()">🗑 Удалить</button>
-    </div>
-  </div>
+  <h1 id="scpTitle"></h1>
+  <div id="scpContent"></div>
+  <textarea id="editText"></textarea><br>
+  <button id="saveEditBtn" onclick="saveEdit()" style="display:none;">Сохранить</button>
+  <button id="deleteBtn" onclick="deleteSCP()" style="display:none;">Удалить</button>
+  <button onclick="window.location.href='home.html'">Назад</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getDatabase, ref, get, remove, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    import { getDatabase, ref, get, update, remove } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-    // 🔑 Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
       authDomain: "scp-foundation-45b20.firebaseapp.com",
@@ -59,84 +35,53 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // ---------- Получение ID из URL ----------
     const urlParams = new URLSearchParams(window.location.search);
     const scpId = urlParams.get("id");
 
-    const userData = JSON.parse(localStorage.getItem("currentUser")) || null;
-    let currentSCP = null;
+    const nick = localStorage.getItem("nick");
+    const userLevel = parseInt(localStorage.getItem("level") || 1);
+    if (!nick) window.location.href = "index.html";
 
     async function loadSCP() {
-      if (!scpId) {
-        document.getElementById("scpContainer").innerHTML = "<h2>❌ SCP не найден</h2>";
-        return;
-      }
-
       const snap = await get(ref(db, "scp/" + scpId));
       if (!snap.exists()) {
-        document.getElementById("scpContainer").innerHTML = "<h2>❌ SCP не существует</h2>";
+        document.getElementById("scpContent").innerHTML = "<p style='color:red'>Такого SCP не существует</p>";
         return;
       }
 
       const data = snap.val();
-      currentSCP = data;
-
-      // Проверка доступа
-      if (!userData || userData.level < data.requiredLevel) {
-        document.getElementById("scpContainer").innerHTML = "<h2 style='color:red'>ACCESS DENIED</h2>";
-        return;
-      }
-
-      // Заполнение страницы
       document.getElementById("scpTitle").innerText = data.title;
-      document.getElementById("scpText").innerText = data.text;
-      document.getElementById("scpLevel").innerText = data.requiredLevel;
-      document.getElementById("scpAuthor").innerText = data.author;
 
-      // Доступ к редактированию и удалению
-      if (userData && (userData.nick === data.author || userData.level >= 4)) {
-        document.getElementById("actionBtns").classList.remove("hidden");
+      if (userLevel >= data.requiredLevel) {
+        document.getElementById("scpContent").innerText = data.text;
+
+        if ((data.author === nick && userLevel >= 3) || userLevel >= 4) {
+          document.getElementById("editText").style.display = "block";
+          document.getElementById("editText").value = data.text;
+          document.getElementById("saveEditBtn").style.display = "inline";
+          document.getElementById("deleteBtn").style.display = "inline";
+        }
+      } else {
+        document.getElementById("scpContent").innerHTML = "<p style='color:red'>ACCESS DENIED</p>";
       }
-    }
-
-    // ---------- Редактирование ----------
-    function showEdit() {
-      document.getElementById("editSection").classList.remove("hidden");
-      document.getElementById("editTitle").value = currentSCP.title;
-      document.getElementById("editText").value = currentSCP.text;
-      document.getElementById("editLevel").value = currentSCP.requiredLevel;
-    }
-
-    function cancelEdit() {
-      document.getElementById("editSection").classList.add("hidden");
     }
 
     async function saveEdit() {
-      const newData = {
-        title: document.getElementById("editTitle").value,
-        text: document.getElementById("editText").value,
-        requiredLevel: parseInt(document.getElementById("editLevel").value),
-        author: currentSCP.author
-      };
-
-      await update(ref(db, "scp/" + scpId), newData);
-      alert("SCP обновлён!");
-      location.reload();
+      const newText = document.getElementById("editText").value;
+      await update(ref(db, "scp/" + scpId), { text: newText });
+      alert("Изменения сохранены!");
+      loadSCP();
     }
 
-    // ---------- Удаление ----------
     async function deleteSCP() {
       if (!confirm("Удалить SCP?")) return;
       await remove(ref(db, "scp/" + scpId));
-      alert("SCP удалён!");
-      window.location.href = "index.html";
+      alert("Удалено!");
+      window.location.href = "home.html";
     }
 
     loadSCP();
 
-    // глобал
-    window.showEdit = showEdit;
-    window.cancelEdit = cancelEdit;
     window.saveEdit = saveEdit;
     window.deleteSCP = deleteSCP;
   </script>
