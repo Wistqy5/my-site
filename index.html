@@ -175,7 +175,7 @@
 
       const newUser = { password: pass, level: 0, role: "Class-D", createdAt: Date.now() };
       await set(path, newUser);
-      localStorage.setItem("user", JSON.stringify({ nick, level: 1, role: "Researcher" }));
+      localStorage.setItem("user", JSON.stringify({ nick, level: 0, role: "Class-D" }));
       window.location.href = "home.html";
     };
   </script>
