@@ -5,73 +5,137 @@
   <title>SCP Foundation</title>
   <style>
     body {
-      background: #111;
-      color: white;
-      font-family: Arial, sans-serif;
+      background: #0d0d0d;
+      color: #f5f5f5;
+      font-family: 'Segoe UI', Arial, sans-serif;
       display: flex;
       height: 100vh;
+      margin: 0;
     }
+
+    /* Сайдбар */
     #sidebar {
-      width: 250px;
-      background: #1a1a1a;
-      padding: 15px;
+      width: 280px;
+      background: #161616;
+      padding: 20px;
+      border-right: 2px solid #222;
       overflow-y: auto;
     }
-    #content {
-      flex: 1;
-      padding: 20px;
+
+    #sidebar h3 {
+      margin-top: 0;
+      font-size: 18px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 8px;
     }
+
     .scp-entry {
       display: block;
-      padding: 5px;
-      margin: 4px 0;
+      padding: 8px;
+      margin: 6px 0;
+      border-radius: 6px;
       color: #ccc;
       text-decoration: none;
+      transition: background 0.2s, color 0.2s;
     }
     .scp-entry:hover {
-      color: white;
-      text-decoration: underline;
-    }
-    #adminPanel, #addScpPanel {
-      margin-top: 20px;
-      padding: 10px;
       background: #222;
-      border-radius: 8px;
-    }
-    input, select, button, textarea {
-      margin: 5px 0;
-      padding: 6px;
-      border-radius: 5px;
-      border: none;
-      width: 95%;
-    }
-    button {
-      cursor: pointer;
-      background: #444;
       color: white;
+    }
+
+    /* Основная часть */
+    #content {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 26px;
+      margin-bottom: 15px;
+      color: #e0e0e0;
+    }
+
+    #userInfo {
+      background: #1c1c1c;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+    }
+
+    /* Карточки */
+    .panel {
+      background: #1c1c1c;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      margin-bottom: 25px;
+    }
+
+    /* Формы */
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #111;
+      color: #eee;
+      transition: all 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #c62828;
+      outline: none;
+    }
+
+    /* Кнопки */
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #c62828;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
     }
     button:hover {
+      background: #e53935;
+    }
+
+    #logoutBtn {
+      background: #444;
+      margin-bottom: 15px;
+    }
+    #logoutBtn:hover {
       background: #666;
     }
   </style>
 </head>
 <body>
 
+  <!-- Сайдбар -->
   <div id="sidebar">
     <h3>Поиск SCP</h3>
     <input type="text" id="search" placeholder="Поиск...">
     <div id="entries">Нет SCP записей</div>
   </div>
 
+  <!-- Контент -->
   <div id="content">
     <h1>☉ SCP Foundation</h1>
-    <div id="userInfo"></div>
-    <button onclick="logout()">Выход</button>
 
-    <!-- 🔹 Админ панель -->
-    <div id="adminPanel" style="display:none;">
+    <div id="userInfo"></div>
+    <button id="logoutBtn" onclick="logout()">Выйти</button>
+
+    <!-- Админ панель -->
+    <div id="adminPanel" class="panel" style="display:none;">
       <h3>Административная панель</h3>
-      <input type="text" id="targetNick" placeholder="Ник пользователя"><br>
+      <input type="text" id="targetNick" placeholder="Ник пользователя">
       <label>Новый уровень:</label>
       <select id="newLevel">
         <option value="1">Level 1</option>
@@ -79,7 +143,7 @@
         <option value="3">Level 3</option>
         <option value="4">Level 4</option>
         <option value="5">Level 5</option>
-      </select><br>
+      </select>
       <label>Роль:</label>
       <select id="newRole">
         <option value="Researcher">Researcher</option>
@@ -87,25 +151,25 @@
         <option value="MTF">MTF</option>
         <option value="Administrator">Administrator</option>
         <option value="O5">O5 Council</option>
-      </select><br>
+      </select>
       <button onclick="updateUser()">Обновить</button>
     </div>
 
-    <!-- 🔹 Добавление SCP -->
-    <div id="addScpPanel" style="display:none;">
+    <!-- Добавление SCP -->
+    <div id="addScpPanel" class="panel" style="display:none;">
       <h3>Добавить SCP</h3>
-      <input type="text" id="scpTitle" placeholder="Название SCP"><br>
-      <input type="number" id="scpLevel" placeholder="Требуемый уровень"><br>
-      <textarea id="scpContent" placeholder="Описание"></textarea><br>
+      <input type="text" id="scpTitle" placeholder="Название SCP">
+      <input type="number" id="scpLevel" placeholder="Требуемый уровень">
+      <textarea id="scpContent" placeholder="Описание"></textarea>
       <button onclick="addScp()">Добавить</button>
     </div>
   </div>
 
+  <!-- Firebase + JS -->
   <script type="module">
     import { getDatabase, ref, set, get, update, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 
-    // 🔧 Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
       authDomain: "scp-foundation-45b20.firebaseapp.com",
@@ -120,15 +184,15 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // ✅ Проверяем localStorage
+    // Данные пользователя
     const userData = JSON.parse(localStorage.getItem("user"));
     if (!userData) {
       window.location.href = "index.html";
     }
 
     document.getElementById("userInfo").innerHTML = `
-      Добро пожаловать, ${userData.nick}! <br>
-      Ваш уровень: ${userData.level} <br>
+      <b>Добро пожаловать, ${userData.nick}!</b><br>
+      Ваш уровень: <span style="color:#ff5555">${userData.level}</span><br>
       Ваша роль: ${userData.role}
     `;
 
@@ -182,7 +246,7 @@
 
       try {
         const newRef = push(ref(db, "scp"));
-        await set(newRef, { title, requiredLevel: level, content });
+        await set(newRef, { title, requiredLevel: level, content, author: userData.nick });
         alert("SCP добавлен!");
         loadEntries();
       } catch (err) {
