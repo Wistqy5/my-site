@@ -212,5 +212,35 @@
         }
 
         // Функция для создания нового SCP
-        function createSCP() {
-            if (currentUser.level <
+       <script>
+  function assignRole() {
+    if (!currentUser || currentUser.role !== "Администратор") {
+      return alert("⛔ Только администратор может выдавать роли.");
+    }
+
+    const targetName = document.getElementById("target-user").value.trim();
+    const targetRole = document.getElementById("target-role").value;
+
+    const targetUser = users.find(u => u.username === targetName);
+    if (!targetUser) return alert("🚫 Пользователь не найден.");
+
+    // Присваиваем роль
+    targetUser.role = targetRole;
+
+    // Автоматически корректируем уровень
+    if (targetRole === "Исследователь") {
+      targetUser.level = 2;
+    } else if (targetRole === "О5") {
+      targetUser.level = 5;
+    }
+
+    saveUsers();
+    alert(`✅ Пользователю ${targetUser.username} выдана роль: ${targetUser.role} (уровень ${targetUser.level})`);
+
+    // Обновим профиль, если изменили сами себе
+    if (currentUser.username === targetUser.username) {
+      document.getElementById("profile").innerHTML =
+        `<strong>Профиль:</strong> ${currentUser.username} | Уровень: ${currentUser.level} | Роль: ${currentUser.role}`;
+    }
+  }
+</script>
