@@ -19,6 +19,7 @@
     #logoutBtn { background:#444; }
     #logoutBtn:hover { background:#666; }
     #logo { width:28px; height:28px; vertical-align:-6px; border-radius:0; margin-right:8px; }
+    #userStats { background:#111; padding:12px; border-radius:8px; margin-top:10px; font-size:14px; line-height:1.5; }
   </style>
 </head>
 <body>
@@ -29,11 +30,12 @@
   </div>
 
   <div id="content">
-    <h1><img id="logo" src="logo.png" alt="">Secure.Contain.Protect</h1>
+    <h1><img id="logo" src="logo.png" alt="">SCP Foundation</h1>
 
     <div id="userInfo"></div>
     <button id="logoutBtn" onclick="logout()">Выйти</button>
 
+    <!-- Админ-панель -->
     <div id="adminPanel" class="panel" style="display:none;">
       <h3>Административная панель</h3>
       <input type="text" id="targetNick" placeholder="Ник пользователя">
@@ -80,6 +82,15 @@
       <button onclick="updateUser()">Обновить</button>
     </div>
 
+    <!-- Просмотр статистики -->
+    <div id="statsPanel" class="panel" style="display:none;">
+      <h3>Просмотр статистики пользователя</h3>
+      <input type="text" id="statsNick" placeholder="Ник пользователя">
+      <button onclick="showStats()">Показать статистику</button>
+      <div id="userStats"></div>
+    </div>
+
+    <!-- Добавление SCP -->
     <div id="addScpPanel" class="panel" style="display:none;">
       <h3>Добавить SCP</h3>
       <input type="text" id="scpTitle" placeholder="Название SCP">
@@ -128,6 +139,7 @@
         }
         if (Number(user.level) >= 4) {
           document.getElementById("adminPanel").style.display = "block";
+          document.getElementById("statsPanel").style.display = "block";
         }
       }
     }
@@ -159,6 +171,23 @@
       if (!snap.exists()) return alert("Пользователь не найден");
       await update(uref, { level, role, site, unit });
       alert(`Пользователь ${nick} обновлён: Level ${level}, Role ${role}, Site ${site}${role === "MTF" ? ", Unit " + unit : ""}`);
+    };
+
+    window.showStats = async () => {
+      const nick = document.getElementById("statsNick").value.trim();
+      if (!nick) return alert("Введите ник");
+      const uref = ref(db, "users/" + nick);
+      const snap = await get(uref);
+      if (!snap.exists()) return document.getElementById("userStats").innerHTML = "❌ Пользователь не найден";
+      const u = snap.val();
+      document.getElementById("userStats").innerHTML = `
+        <b>Ник:</b> ${nick}<br>
+        <b>Уровень:</b> ${u.level}<br>
+        <b>Роль:</b> ${u.role}<br>
+        <b>Сайт:</b> ${u.site || "—"}<br>
+        ${u.role === "MTF" && u.unit ? "<b>Подразделение:</b> " + u.unit + "<br>" : ""}
+        <b>Дата регистрации:</b> ${u.createdAt ? new Date(u.createdAt).toLocaleString() : "—"}<br>
+      `;
     };
 
     window.addScp = async () => {
