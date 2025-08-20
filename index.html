@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>SCP Foundation — Вход</title>
   <style>
-    /* общий сброс и фикс вылазящих инпутов */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -115,7 +114,7 @@
       <div id="tab-reg" class="tab" onclick="switchTab('reg')">Регистрация</div>
     </div>
 
-    <!-- Вход -->
+    <!-- Форма входа -->
     <div id="form-login">
       <label>Ник</label>
       <input id="loginNick" type="text" placeholder="Ник">
@@ -124,7 +123,7 @@
       <button onclick="login()">Войти</button>
     </div>
 
-    <!-- Регистрация -->
+    <!-- Форма регистрации -->
     <div id="form-reg" class="hidden">
       <label>Ник</label>
       <input id="regNick" type="text" placeholder="Придумайте ник">
@@ -138,6 +137,7 @@
   </div>
 
   <script>
+    // Переключение вкладок
     function switchTab(tab) {
       document.getElementById("form-login").classList.add("hidden");
       document.getElementById("form-reg").classList.add("hidden");
@@ -153,12 +153,50 @@
       }
     }
 
-    function login() {
-      alert("Вход...");
+    // Регистрация
+    function register() {
+      const nick = document.getElementById("regNick").value.trim();
+      const pass = document.getElementById("regPass").value.trim();
+
+      if (nick.length < 3 || pass.length < 4) {
+        alert("Ник ≥3 символов, пароль ≥4 символов!");
+        return;
+      }
+
+      if (localStorage.getItem("user_" + nick)) {
+        alert("Такой пользователь уже существует!");
+        return;
+      }
+
+      const userData = { password: pass, level: 1, role: "Researcher" };
+      localStorage.setItem("user_" + nick, JSON.stringify(userData));
+
+      alert("Регистрация успешна! Теперь войдите.");
+      switchTab("login");
     }
 
-    function register() {
-      alert("Регистрация...");
+    // Вход
+    function login() {
+      const nick = document.getElementById("loginNick").value.trim();
+      const pass = document.getElementById("loginPass").value.trim();
+
+      const saved = localStorage.getItem("user_" + nick);
+      if (!saved) {
+        alert("Пользователь не найден!");
+        return;
+      }
+
+      const userData = JSON.parse(saved);
+      if (userData.password !== pass) {
+        alert("Неверный пароль!");
+        return;
+      }
+
+      // сохраняем текущего пользователя
+      localStorage.setItem("currentUser", nick);
+
+      // редирект на домашнюю страницу
+      window.location.href = "home.html";
     }
   </script>
 </body>
