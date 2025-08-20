@@ -5,127 +5,130 @@
   <title>SCP Foundation — Home</title>
   <style>
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
       background: #0d0d0d;
-      color: #fff;
-    }
-
-    header {
-      background: #1a1a1a;
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-    }
-
-    header h1 {
+      color: #eee;
+      font-family: Arial, sans-serif;
       margin: 0;
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-    }
-
-    header h1 img {
-      width: 28px;
-      height: 28px;
-      margin-right: 8px;
-    }
-
-    header button {
-      background: #b71c1c;
-      border: none;
-      border-radius: 6px;
-      color: #fff;
-      padding: 8px 14px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    header button:hover {
-      background: #d32f2f;
-    }
-
-    main {
-      max-width: 800px;
-      margin: 40px auto;
       padding: 20px;
+    }
+    h1 { color: #c62828; }
+    .section {
       background: #1a1a1a;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.6);
-    }
-
-    h2 {
-      margin-top: 0;
-      margin-bottom: 15px;
-    }
-
-    .info {
+      padding: 15px;
+      border-radius: 10px;
       margin-bottom: 20px;
-      padding: 15px;
+    }
+    input, select, textarea, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 6px;
+      margin-bottom: 12px;
+      border: 1px solid #333;
+      border-radius: 6px;
       background: #111;
-      border-radius: 8px;
+      color: #fff;
     }
-
-    .info p {
-      margin: 6px 0;
+    button {
+      background: #c62828;
+      cursor: pointer;
+      font-weight: bold;
     }
-
-    .restricted {
-      margin-top: 20px;
-      padding: 15px;
+    button:hover { background: #e53935; }
+    .scp-card {
       background: #222;
-      border-left: 4px solid #b71c1c;
-      border-radius: 8px;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1><img src="logo.png" alt="">SCP Foundation</h1>
-    <button onclick="logout()">Выйти</button>
-  </header>
+  <h1>SCP Foundation — Home</h1>
 
-  <main>
-    <h2>Добро пожаловать</h2>
-    <div class="info" id="userInfo">
-      Загрузка данных пользователя...
-    </div>
+  <!-- Инфо -->
+  <div class="section" id="user-info">
+    <h2>Информация о пользователе</h2>
+    <p><b>Ник:</b> <span id="info-nick"></span></p>
+    <p><b>Уровень:</b> <span id="info-level"></span></p>
+    <p><b>Роль:</b> <span id="info-role"></span></p>
+    <p><b>Site:</b> <span id="info-site"></span></p>
+  </div>
 
-    <div class="restricted" id="restrictedArea" style="display:none;">
-      <h3>Секретная зона</h3>
-      <p>Этот раздел видят только сотрудники с уровнем доступа ≥ 3.</p>
-    </div>
-  </main>
+  <!-- Секретная зона -->
+  <div class="section hidden" id="restricted">
+    <h2>Секретная зона</h2>
+    <p>Доступ разрешён! Ваш уровень позволяет видеть эту область.</p>
+  </div>
+
+  <!-- Форма SCP -->
+  <div class="section hidden" id="scp-create">
+    <h2>Создать SCP</h2>
+    <label>Номер SCP</label>
+    <input id="scp-id" type="text" placeholder="Например: SCP-173">
+    <label>Описание</label>
+    <textarea id="scp-desc" rows="3"></textarea>
+    <button onclick="createSCP()">Создать</button>
+  </div>
+
+  <!-- Список SCP -->
+  <div class="section" id="scp-list">
+    <h2>Документы SCP</h2>
+    <div id="scps"></div>
+  </div>
+
+  <!-- Админ панель -->
+  <div class="section hidden" id="admin">
+    <h2>Админ-панель</h2>
+    <label>Выберите пользователя для изменения</label>
+    <select id="admin-user"></select>
+
+    <label>Новый уровень доступа</label>
+    <input id="admin-level" type="number" min="1" max="5">
+
+    <label>Новый site</label>
+    <select id="admin-site">
+      <option value="Site-17">Site-17</option>
+      <option value="Site-82">Site-82</option>
+    </select>
+
+    <button onclick="updateUser()">Сохранить изменения</button>
+  </div>
+
+  <button onclick="logout()">Выйти</button>
 
   <script>
-    function loadUser() {
+    function loadCurrentUser() {
       const currentNick = localStorage.getItem("currentUser");
       if (!currentNick) {
         window.location.href = "index.html";
         return;
       }
-
-      const saved = localStorage.getItem("user_" + currentNick);
-      if (!saved) {
-        alert("Ошибка: данные пользователя не найдены.");
+      const data = JSON.parse(localStorage.getItem("user_" + currentNick));
+      if (!data) {
         window.location.href = "index.html";
         return;
       }
 
-      const user = JSON.parse(saved);
-      const infoBox = document.getElementById("userInfo");
-
-      infoBox.innerHTML = `
-        <p><b>Ник:</b> ${currentNick}</p>
-        <p><b>Уровень доступа:</b> ${user.level}</p>
-        <p><b>Роль:</b> ${user.role}</p>
-      `;
-
-      if (user.level >= 3) {
-        document.getElementById("restrictedArea").style.display = "block";
+      // если site не задан, ставим Site-17 по умолчанию
+      if (!data.site) {
+        data.site = "Site-17";
+        localStorage.setItem("user_" + currentNick, JSON.stringify(data));
       }
+
+      document.getElementById("info-nick").innerText = currentNick;
+      document.getElementById("info-level").innerText = data.level;
+      document.getElementById("info-role").innerText = data.role;
+      document.getElementById("info-site").innerText = data.site;
+
+      // доступ по уровням
+      if (data.level >= 3) document.getElementById("restricted").classList.remove("hidden");
+      if (data.level >= 2) document.getElementById("scp-create").classList.remove("hidden");
+      if (data.level >= 4) {
+        document.getElementById("admin").classList.remove("hidden");
+        fillAdminUsers();
+      }
+
+      renderSCPs();
     }
 
     function logout() {
@@ -133,7 +136,66 @@
       window.location.href = "index.html";
     }
 
-    loadUser();
+    // создание SCP
+    function createSCP() {
+      const id = document.getElementById("scp-id").value.trim();
+      const desc = document.getElementById("scp-desc").value.trim();
+      if (!id || !desc) return alert("Заполните все поля!");
+
+      const scps = JSON.parse(localStorage.getItem("scps") || "[]");
+      scps.push({ id, desc, author: localStorage.getItem("currentUser") });
+      localStorage.setItem("scps", JSON.stringify(scps));
+      document.getElementById("scp-id").value = "";
+      document.getElementById("scp-desc").value = "";
+      renderSCPs();
+    }
+
+    function renderSCPs() {
+      const scps = JSON.parse(localStorage.getItem("scps") || "[]");
+      const box = document.getElementById("scps");
+      box.innerHTML = "";
+      scps.forEach(scp => {
+        const div = document.createElement("div");
+        div.className = "scp-card";
+        div.innerHTML = `<b>${scp.id}</b> — ${scp.desc}<br><small>Автор: ${scp.author}</small>`;
+        box.appendChild(div);
+      });
+    }
+
+    // админка
+    function fillAdminUsers() {
+      const select = document.getElementById("admin-user");
+      select.innerHTML = "";
+      for (let key in localStorage) {
+        if (key.startsWith("user_")) {
+          const nick = key.replace("user_", "");
+          const opt = document.createElement("option");
+          opt.value = nick;
+          opt.textContent = nick;
+          select.appendChild(opt);
+        }
+      }
+    }
+
+    function updateUser() {
+      const nick = document.getElementById("admin-user").value;
+      const level = parseInt(document.getElementById("admin-level").value);
+      const site = document.getElementById("admin-site").value;
+
+      const data = JSON.parse(localStorage.getItem("user_" + nick));
+      if (!data) return alert("Пользователь не найден!");
+
+      if (level) data.level = level;
+      if (site) data.site = site;
+
+      localStorage.setItem("user_" + nick, JSON.stringify(data));
+      alert("Изменения сохранены!");
+      if (nick === localStorage.getItem("currentUser")) {
+        loadCurrentUser(); // обновить инфо, если админ сам себя меняет
+      }
+    }
+
+    loadCurrentUser();
   </script>
 </body>
 </html>
