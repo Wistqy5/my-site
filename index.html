@@ -1,14 +1,81 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="utf-8" />
-    <title>Мой первый сайт</title>
-    <style>
-      body { background:#0f1115; color:#e5e7eb; font-family:sans-serif; text-align:center; padding-top:20%; }
-    </style>
-  </head>
-  <body>
-    <h1>Привет, мир!</h1>
-    <p>Это мой пустой сайт. Скоро здесь будет что-то крутое.</p>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мой сайт</title>
+  <style>
+    /* Общие стили */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      transition: background-color 0.4s, color 0.4s;
+    }
+
+    /* Светлая тема */
+    body.light {
+      background-color: #ffffff;
+      color: #000000;
+    }
+
+    /* Тёмная тема */
+    body.dark {
+      background-color: #0d0d0d;
+      color: #f5f5f5;
+    }
+
+    /* Кнопка переключения темы */
+    #theme-toggle {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #444, #222);
+      color: white;
+      font-size: 14px;
+      transition: background 0.3s;
+      z-index: 1000;
+    }
+
+    #theme-toggle:hover {
+      background: linear-gradient(135deg, #666, #333);
+    }
+
+    /* Контент */
+    main {
+      padding: 50px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <button id="theme-toggle">🌙 Dark Mode</button>
+
+  <main>
+    <h1>Мой сайт</h1>
+    <p>Добро пожаловать! Здесь можно переключать светлую и тёмную тему.</p>
+  </main>
+
+  <script>
+    const toggleBtn = document.getElementById('theme-toggle');
+    const body = document.body;
+
+    // Стартовая тема — светлая
+    body.classList.add('light');
+
+    toggleBtn.addEventListener('click', () => {
+      body.classList.toggle('dark');
+      body.classList.toggle('light');
+
+      if (body.classList.contains('dark')) {
+        toggleBtn.textContent = '☀️ Light Mode';
+      } else {
+        toggleBtn.textContent = '🌙 Dark Mode';
+      }
+    });
+  </script>
+</body>
 </html>
