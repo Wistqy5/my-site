@@ -1,75 +1,23 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>SCP Foundation Database</title>
-  <style>
-    body {
-      background-color: #000;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    input, textarea, button {
-      display: block;
-      margin: 10px 0;
-      padding: 8px;
-      width: 300px;
-      background: #111;
-      color: #fff;
-      border: 1px solid #444;
-      border-radius: 5px;
-    }
-    button {
-      background: #222;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #333;
-    }
-    #scp-list {
-      margin-top: 20px;
-      padding-left: 20px;
-    }
-    li {
-      margin-bottom: 10px;
-      background: #111;
-      padding: 8px;
-      border-radius: 5px;
-    }
-  </style>
-</head>
-<body>
-  <h1>🔐 SCP Foundation – Вход и Регистрация</h1>
+// Firebase SDK
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut 
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { 
+  getDatabase, 
+  ref, 
+  set, 
+  get 
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-  <div id="auth">
-    <input id="username" placeholder="Имя пользователя">
-    <input id="password" type="password" placeholder="Пароль">
-    <button onclick="register()">Регистрация</button>
-    <button onclick="login()">Войти</button>
-    <pre id="output"></pre>
-  </div>
-
-  <div id="scp-panel" style="display:none;">
-    <h2>📂 SCP Объекты</h2>
-    <input id="scp-id" placeholder="SCP-XXX">
-    <input id="scp-name" placeholder="Название">
-    <textarea id="scp-desc" placeholder="Описание"></textarea>
-    <button onclick="addSCP()">Добавить SCP</button>
-
-    <h3>Список SCP:</h3>
-    <ul id="scp-list"></ul>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-    // Firebase config
-    const firebaseConfig = {
+// 🔑 Твои данные Firebase
+const firebaseConfig = {
   apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
   authDomain: "scp-foundation-45b20.firebaseapp.com",
-  databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com/",
+  databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com",
   projectId: "scp-foundation-45b20",
   storageBucket: "scp-foundation-45b20.firebasestorage.app",
   messagingSenderId: "383272466518",
@@ -77,96 +25,83 @@
   measurementId: "G-G84NR3K9G2"
 };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+// init
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getDatabase(app);
 
-    // --- Функции ---
+// ------------ AUTH ------------
+window.register = async function() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-    async function registerUser() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
+  try {
+    const userCred = await createUserWithEmailAndPassword(auth, email, password);
+    const uid = userCred.user.uid;
+    // Новый пользователь получает уровень 1
+    await set(ref(db, "users/" + uid), { level: 1 });
+    alert("Registered! Default access level = 1");
+  } catch (e) {
+    alert(e.message);
+  }
+};
 
-      if (!user || !pass) {
-        document.getElementById("output").textContent = "⚠️ Введите имя и пароль!";
-        return;
-      }
+window.login = async function() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-      await set(ref(db, "users/" + user), {
-        password: pass,
-        role: "Исследователь",
-        level: 1
-      });
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    alert("Logged in!");
+    loadEntries();
+  } catch (e) {
+    alert(e.message);
+  }
+};
 
-      document.getElementById("output").textContent = "✅ Пользователь зарегистрирован!";
+window.logout = function() {
+  signOut(auth).then(() => {
+    alert("Logged out!");
+    document.getElementById("entries").innerHTML = "";
+  });
+};
+
+// ------------ ENTRIES ------------
+async function loadEntries() {
+  const entriesDiv = document.getElementById("entries");
+  entriesDiv.innerHTML = "";
+
+  const user = auth.currentUser;
+  if (!user) {
+    entriesDiv.innerHTML = "<p>Please login</p>";
+    return;
+  }
+
+  // Получаем уровень доступа юзера
+  const userSnap = await get(ref(db, "users/" + user.uid));
+  let userLevel = 1;
+  if (userSnap.exists()) {
+    userLevel = userSnap.val().level || 1;
+  }
+
+  // Загружаем SCP записи
+  const scpSnap = await get(ref(db, "scp"));
+  if (!scpSnap.exists()) {
+    entriesDiv.innerHTML = "<p>No SCP entries in DB</p>";
+    return;
+  }
+
+  scpSnap.forEach(child => {
+    const data = child.val();
+    const box = document.createElement("div");
+    box.className = "scp-entry";
+
+    if (userLevel >= data.requiredLevel) {
+      box.innerHTML = `<h3>${data.title}</h3><p>${data.text}</p><small>Required Level: ${data.requiredLevel}</small>`;
+    } else {
+      box.innerHTML = `<h3>${data.title}</h3><p style="color:red">ACCESS DENIED</p><small>Required Level: ${data.requiredLevel}</small>`;
     }
 
-    async function loginUser() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-
-      if (!user || !pass) {
-        document.getElementById("output").textContent = "⚠️ Введите имя и пароль!";
-        return;
-      }
-
-      const snapshot = await get(child(ref(db), "users/" + user));
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        if (data.password === pass) {
-          document.getElementById("output").textContent = "🔓 Вход выполнен! Добро пожаловать, " + user;
-          document.getElementById("auth").style.display = "none";
-          document.getElementById("scp-panel").style.display = "block";
-          loadSCPs();
-        } else {
-          document.getElementById("output").textContent = "❌ Неверный пароль!";
-        }
-      } else {
-        document.getElementById("output").textContent = "❌ Пользователь не найден!";
-      }
-    }
-
-    async function addSCPentry() {
-      const id = document.getElementById("scp-id").value;
-      const name = document.getElementById("scp-name").value;
-      const desc = document.getElementById("scp-desc").value;
-
-      if (!id || !name || !desc) {
-        alert("⚠️ Заполни все поля SCP!");
-        return;
-      }
-
-      await set(ref(db, "scp/" + id), {
-        name: name,
-        description: desc
-      });
-
-      document.getElementById("scp-id").value = "";
-      document.getElementById("scp-name").value = "";
-      document.getElementById("scp-desc").value = "";
-
-      loadSCPs();
-    }
-
-    function loadSCPs() {
-      const scpList = document.getElementById("scp-list");
-      scpList.innerHTML = "";
-
-      onValue(ref(db, "scp"), (snapshot) => {
-        scpList.innerHTML = "";
-        snapshot.forEach(child => {
-          const data = child.val();
-          const li = document.createElement("li");
-          li.textContent = child.key + " - " + data.name + " :: " + data.description;
-          scpList.appendChild(li);
-        });
-      });
-    }
-
-    // Экспортируем функции в window, чтобы onclick их видел
-    window.register = registerUser;
-    window.login = loginUser;
-    window.addSCP = addSCPentry;
-
-  </script>
-</body>
-</html>
+    entriesDiv.appendChild(box);
+  });
+}
