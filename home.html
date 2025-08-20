@@ -5,49 +5,53 @@
   <title>SCP Foundation</title>
   <style>
     body {
-      background: #111;
-      color: white;
-      font-family: Arial, sans-serif;
+      margin: 0;
       display: flex;
-      height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
     }
     #sidebar {
       width: 250px;
       background: #1a1a1a;
       padding: 15px;
-      overflow-y: auto;
+      height: 100vh;
+    }
+    #sidebar h2 {
+      margin-top: 0;
+    }
+    #search {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 10px;
+    }
+    .scp-entry {
+      display: block;
+      margin: 5px 0;
+      padding: 5px;
+      color: #fff;
+      text-decoration: none;
+    }
+    .scp-entry:hover {
+      background: #333;
     }
     #content {
       flex: 1;
       padding: 20px;
     }
-    .scp-entry {
-      display: block;
-      padding: 5px;
-      margin: 4px 0;
-      color: #ccc;
-      text-decoration: none;
-    }
-    .scp-entry:hover {
-      color: white;
-      text-decoration: underline;
-    }
     #adminPanel {
       margin-top: 20px;
       padding: 10px;
       background: #222;
-      border-radius: 8px;
-    }
-    input, select, button {
-      margin: 5px 0;
-      padding: 6px;
       border-radius: 5px;
-      border: none;
     }
     button {
-      cursor: pointer;
+      margin-top: 10px;
+      padding: 5px 10px;
+      border: none;
       background: #444;
       color: white;
+      cursor: pointer;
     }
     button:hover {
       background: #666;
@@ -55,129 +59,75 @@
   </style>
 </head>
 <body>
-
   <div id="sidebar">
-    <h3>Поиск SCP</h3>
+    <h2>Поиск SCP</h2>
     <input type="text" id="search" placeholder="Поиск...">
-    <div id="entries">Нет SCP записей</div>
+    <div id="entries">Загрузка...</div>
   </div>
 
   <div id="content">
     <h1>☉ SCP Foundation</h1>
+    <p id="welcome"></p>
+    <p id="role"></p>
+    <button onclick="logout()">Выйти</button>
 
-    <!-- 🔹 После входа -->
-    <div id="userInfo"></div>
-    <button id="logoutBtn" onclick="logout()" style="display:none;">Выход</button>
-
-    <!-- 🔹 Админ панель -->
     <div id="adminPanel" style="display:none;">
-      <h3>Административная панель</h3>
-      <input type="text" id="targetNick" placeholder="Ник пользователя"><br>
-      <label>Новый уровень:</label>
+      <h3>Админ-панель</h3>
+      <input type="text" id="userNick" placeholder="Ник пользователя">
       <select id="newLevel">
         <option value="1">Level 1</option>
         <option value="2">Level 2</option>
         <option value="3">Level 3</option>
         <option value="4">Level 4</option>
         <option value="5">Level 5</option>
-      </select><br>
-      <label>Роль:</label>
-      <select id="newRole">
-        <option value="Researcher">Researcher</option>
-        <option value="Security">Security</option>
-        <option value="MTF">MTF</option>
-        <option value="Administrator">Administrator</option>
-        <option value="O5">O5 Council</option>
-      </select><br>
-      <button onclick="updateUser()">Обновить</button>
+      </select>
+      <button onclick="changeLevel()">Изменить уровень</button>
     </div>
   </div>
 
-  <!-- 🔹 Firebase + Скрипт -->
   <script type="module">
-    import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-    // 🔧 ТВОИ НАСТРОЙКИ FIREBASE
+    // 🔥 Твои настройки Firebase
     const firebaseConfig = {
-      apiKey: "AIzaSy....", // твой ключ
-      authDomain: "scp-foundation.firebaseapp.com",
-      databaseURL: "https://scp-foundation.firebaseio.com",
-      projectId: "scp-foundation",
-      storageBucket: "scp-foundation.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "1:123456789:web:abcdef"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    let currentUser = null;
-    let userLevel = 0;
-    let userRole = "Researcher";
-
-    // вход
-    async function login() {
-      const nick = document.getElementById("nick").value;
-      const password = document.getElementById("password").value;
-      const snap = await get(child(ref(db), "users/" + nick));
-      if (!snap.exists()) { alert("Нет такого пользователя!"); return; }
-
-      const data = snap.val();
-      if (data.password !== password) { alert("Неверный пароль!"); return; }
-
-      currentUser = nick;
-      userLevel = data.level || 1;
-      userRole = data.role || "Researcher";
-
-      document.getElementById("authSection").style.display = "none";
-      document.getElementById("logoutBtn").style.display = "inline";
-
-      document.getElementById("userInfo").innerHTML = `
-        Добро пожаловать, ${nick}! <br>
-        Ваш уровень: ${userLevel} <br>
-        Ваша роль: ${userRole}
-      `;
-
-      if (userLevel >= 4) {
-        document.getElementById("adminPanel").style.display = "block";
-      }
-
-      loadEntries();
+    // Загружаем текущего юзера
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    if (!currentUser) {
+      window.location.href = "index.html"; // если не вошёл → назад
     }
 
-    // выход
-    function logout() {
-      currentUser = null;
-      userLevel = 0;
-      userRole = "Researcher";
-      document.getElementById("authSection").style.display = "block";
-      document.getElementById("logoutBtn").style.display = "none";
-      document.getElementById("userInfo").innerHTML = "";
-      document.getElementById("adminPanel").style.display = "none";
-      document.getElementById("entries").innerHTML = "Нет SCP записей";
+    document.getElementById("welcome").innerText =
+      `Добро пожаловать, ${currentUser.nick} (Level ${currentUser.level})`;
+
+    const roles = {
+      1: "Сотрудник начального уровня",
+      2: "Исследователь",
+      3: "Старший исследователь",
+      4: "Администратор",
+      5: "O5 Совет"
+    };
+    document.getElementById("role").innerText = "Ваша роль: " + roles[currentUser.level];
+
+    // Админ-панель только если уровень ≥ 4
+    if (currentUser.level >= 4) {
+      document.getElementById("adminPanel").style.display = "block";
     }
 
-    // админ изменяет юзера
-    async function updateUser() {
-      const nick = document.getElementById("targetNick").value;
-      const level = parseInt(document.getElementById("newLevel").value);
-      const role = document.getElementById("newRole").value;
-
-      const snap = await get(child(ref(db), "users/" + nick));
-      if (!snap.exists()) { alert("Пользователь не найден!"); return; }
-
-      await update(ref(db, "users/" + nick), {
-        level: level,
-        role: role
-      });
-
-      alert(`Пользователь ${nick} обновлён: Level ${level}, Role ${role}`);
-    }
-
-    // загрузка SCP списка
+    // Загружаем SCP записи
     async function loadEntries() {
-      const snap = await get(child(ref(db), "scp"));
+      const snap = await get(ref(db, "scp"));
       const entriesDiv = document.getElementById("entries");
       entriesDiv.innerHTML = "";
 
@@ -186,27 +136,42 @@
         return;
       }
 
-      snap.forEach(childSnap => {
-        const data = childSnap.val();
+      snap.forEach(child => {
+        const data = child.val();
         const link = document.createElement("a");
-        link.href = `scp.html?id=${childSnap.key}`;
+        link.href = `scp.html?id=${child.key}`;
         link.className = "scp-entry";
         link.innerText = `${data.title} (Level ${data.requiredLevel})`;
         entriesDiv.appendChild(link);
       });
-
-      // поиск
-      document.getElementById("search").addEventListener("input", function() {
-        const query = this.value.toLowerCase();
-        Array.from(entriesDiv.children).forEach(link => {
-          link.style.display = link.innerText.toLowerCase().includes(query) ? "block" : "none";
-        });
-      });
     }
+    loadEntries();
 
-    window.login = login;
+    // Поиск
+    document.getElementById("search").addEventListener("input", (e) => {
+      const q = e.target.value.toLowerCase();
+      document.querySelectorAll(".scp-entry").forEach(link => {
+        link.style.display = link.innerText.toLowerCase().includes(q) ? "block" : "none";
+      });
+    });
+
+    // Изменение уровня доступа
+    async function changeLevel() {
+      const nick = document.getElementById("userNick").value;
+      const newLevel = parseInt(document.getElementById("newLevel").value);
+      if (!nick) return alert("Введите ник!");
+
+      await update(ref(db, "users/" + nick), { level: newLevel });
+      alert(`Уровень ${nick} изменён на ${newLevel}`);
+    }
+    window.changeLevel = changeLevel;
+
+    // Выход
+    function logout() {
+      localStorage.removeItem("currentUser");
+      window.location.href = "index.html";
+    }
     window.logout = logout;
-    window.updateUser = updateUser;
   </script>
 </body>
 </html>
