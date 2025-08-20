@@ -3,6 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <title>SCP Foundation Database</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    input, textarea, button {
+      display: block;
+      margin: 10px 0;
+      padding: 8px;
+      width: 300px;
+      background: #111;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 5px;
+    }
+    button {
+      background: #222;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #333;
+    }
+    #scp-list {
+      margin-top: 20px;
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 10px;
+      background: #111;
+      padding: 8px;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
   <h1>🔐 SCP Foundation – Вход и Регистрация</h1>
@@ -27,11 +62,10 @@
   </div>
 
   <script type="module">
-    // Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, set, get, child, push, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    // Конфигурация Firebase
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
       authDomain: "scp-foundation-45b20.firebaseapp.com",
@@ -43,12 +77,12 @@
       databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com"
     };
 
-    // Инициализация Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Регистрация пользователя
-    async function register() {
+    // --- Функции ---
+
+    async function registerUser() {
       const user = document.getElementById("username").value;
       const pass = document.getElementById("password").value;
 
@@ -66,8 +100,7 @@
       document.getElementById("output").textContent = "✅ Пользователь зарегистрирован!";
     }
 
-    // Вход пользователя
-    async function login() {
+    async function loginUser() {
       const user = document.getElementById("username").value;
       const pass = document.getElementById("password").value;
 
@@ -92,8 +125,7 @@
       }
     }
 
-    // Добавление SCP объекта
-    async function addSCP() {
+    async function addSCPentry() {
       const id = document.getElementById("scp-id").value;
       const name = document.getElementById("scp-name").value;
       const desc = document.getElementById("scp-desc").value;
@@ -115,7 +147,6 @@
       loadSCPs();
     }
 
-    // Загрузка SCP объектов
     function loadSCPs() {
       const scpList = document.getElementById("scp-list");
       scpList.innerHTML = "";
@@ -130,6 +161,12 @@
         });
       });
     }
+
+    // Экспортируем функции в window, чтобы onclick их видел
+    window.register = registerUser;
+    window.login = loginUser;
+    window.addSCP = addSCPentry;
+
   </script>
 </body>
 </html>
