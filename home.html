@@ -32,17 +32,18 @@
       color: white;
       text-decoration: underline;
     }
-    #adminPanel {
+    #adminPanel, #createSCP {
       margin-top: 20px;
       padding: 10px;
       background: #222;
       border-radius: 8px;
     }
-    input, select, button {
+    input, select, textarea, button {
       margin: 5px 0;
       padding: 6px;
       border-radius: 5px;
       border: none;
+      width: 100%;
     }
     button {
       cursor: pointer;
@@ -76,25 +77,62 @@
     <div id="userInfo"></div>
     <button id="logoutBtn" onclick="logout()" style="display:none;">Выход</button>
 
+    <!-- 🔹 Создание SCP -->
+    <div id="createSCP" style="display:none;">
+      <h3>Создать SCP</h3>
+      <input type="text" id="scpTitle" placeholder="Название SCP"><br>
+      <textarea id="scpContent" placeholder="Описание SCP"></textarea><br>
+      <label>Минимальный уровень доступа:</label>
+      <select id="scpLevel">
+        <option value="1">Level 1</option>
+        <option value="2">Level 2</option>
+        <option value="3">Level 3</option>
+        <option value="4">Level 4</option>
+        <option value="5">Level 5</option>
+      </select><br>
+      <button onclick="createSCPEntry()">Добавить SCP</button>
+    </div>
+
     <!-- 🔹 Админ панель -->
-    <div id="adminPanel" style="display:none;"> <h3>Административная панель</h3> <input type="text" id="targetNick" placeholder="Ник пользователя"><br> <label>Новый уровень:</label> <select id="newLevel"> <option value="1">Level 1</option> <option value="2">Level 2</option> <option value="3">Level 3</option> <option value="4">Level 4</option> <option value="5">Level 5</option> </select><br> <label>Роль:</label> <select id="newRole"> <option value="Researcher">Researcher</option> <option value="Security">Security</option> <option value="MTF">MTF</option> <option value="Administrator">Administrator</option> <option value="O5">O5 Council</option> </select><br> <button onclick="updateUser()">Обновить</button> </div> </div>
+    <div id="adminPanel" style="display:none;">
+      <h3>Административная панель</h3>
+      <input type="text" id="targetNick" placeholder="Ник пользователя"><br>
+      <label>Новый уровень:</label>
+      <select id="newLevel">
+        <option value="1">Level 1</option>
+        <option value="2">Level 2</option>
+        <option value="3">Level 3</option>
+        <option value="4">Level 4</option>
+        <option value="5">Level 5</option>
+      </select><br>
+      <label>Роль:</label>
+      <select id="newRole">
+        <option value="Researcher">Researcher</option>
+        <option value="Security">Security</option>
+        <option value="MTF">MTF</option>
+        <option value="Administrator">Administrator</option>
+        <option value="O5">O5 Council</option>
+      </select><br>
+      <button onclick="updateUser()">Обновить</button>
+    </div>
+  </div>
 
   <!-- 🔹 Firebase + Скрипт -->
   <script type="module">
-    import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    import { getDatabase, ref, set, get, update, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 
     // 🔧 ТВОИ НАСТРОЙКИ FIREBASE
     const firebaseConfig = {
-  apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
-  authDomain: "scp-foundation-45b20.firebaseapp.com",
-  databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com/",
-  projectId: "scp-foundation-45b20",
-  storageBucket: "scp-foundation-45b20.firebasestorage.app",
-  messagingSenderId: "383272466518",
-  appId: "1:383272466518:web:3225b8911a56c9d769e3f7",
-  measurementId: "G-G84NR3K9G2"
-};
+      apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
+      authDomain: "scp-foundation-45b20.firebaseapp.com",
+      databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com/",
+      projectId: "scp-foundation-45b20",
+      storageBucket: "scp-foundation-45b20.firebasestorage.app",
+      messagingSenderId: "383272466518",
+      appId: "1:383272466518:web:3225b8911a56c9d769e3f7",
+      measurementId: "G-G84NR3K9G2"
+    };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
@@ -142,6 +180,10 @@
           Ваша роль: ${userRole}
         `;
 
+        if (userLevel >= 3) {
+          document.getElementById("createSCP").style.display = "block";
+        }
+
         if (userLevel >= 4) {
           document.getElementById("adminPanel").style.display = "block";
         }
@@ -162,6 +204,7 @@
       document.getElementById("logoutBtn").style.display = "none";
       document.getElementById("userInfo").innerHTML = "";
       document.getElementById("adminPanel").style.display = "none";
+      document.getElementById("createSCP").style.display = "none";
       document.getElementById("entries").innerHTML = "Нет SCP записей";
     }
 
@@ -192,6 +235,36 @@
       } catch (err) {
         console.error(err);
         alert("Ошибка при обновлении пользователя!");
+      }
+    }
+
+    // создать SCP
+    async function createSCPEntry() {
+      const title = document.getElementById("scpTitle").value.trim();
+      const content = document.getElementById("scpContent").value.trim();
+      const requiredLevel = parseInt(document.getElementById("scpLevel").value);
+
+      if (!title || !content) {
+        alert("Заполните все поля!");
+        return;
+      }
+
+      try {
+        const newRef = push(ref(db, "scp"));
+        await set(newRef, {
+          title: title,
+          content: content,
+          requiredLevel: requiredLevel,
+          author: currentUser
+        });
+
+        alert("SCP успешно создан!");
+        document.getElementById("scpTitle").value = "";
+        document.getElementById("scpContent").value = "";
+        loadEntries();
+      } catch (err) {
+        console.error(err);
+        alert("Ошибка при создании SCP!");
       }
     }
 
@@ -232,6 +305,7 @@
     window.login = login;
     window.logout = logout;
     window.updateUser = updateUser;
+    window.createSCPEntry = createSCPEntry;
   </script>
 </body>
 </html>
