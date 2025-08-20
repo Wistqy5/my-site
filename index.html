@@ -15,7 +15,7 @@
       margin:0;
     }
     .box {
-      width:340px;
+      width:300px; /* стало уже */
       background:#111;
       border-radius:12px;
       padding:22px;
@@ -90,12 +90,6 @@
     }
     button:hover { background:#e53935; }
 
-    .ghost {
-      background:#444;
-      margin-top:10px;
-    }
-    .ghost:hover { background:#666; }
-
     .hidden { display:none; }
   </style>
 </head>
@@ -129,8 +123,6 @@
         Будут назначены: уровень 1, роль Researcher.
       </div>
     </div>
-
-    <button class="ghost" onclick="prefill()">Заполнить демо-данные</button>
   </div>
 
   <script type="module">
@@ -155,13 +147,6 @@
       document.getElementById('form-reg').classList.toggle('hidden', name !== 'reg');
       document.getElementById('tab-login').classList.toggle('active', name === 'login');
       document.getElementById('tab-reg').classList.toggle('active', name === 'reg');
-    };
-
-    window.prefill = () => {
-      document.getElementById('loginNick').value = "demo";
-      document.getElementById('loginPass').value = "demo";
-      document.getElementById('regNick').value = "demo";
-      document.getElementById('regPass').value = "demo";
     };
 
     window.login = async () => {
