@@ -151,7 +151,7 @@
       "Служба Безопасности": ["Cadet", "Security Officer", "Sergeant", "Lieutenant", "Captain", "Chief of Security"],
       "Мобильные Оперативные Группы": ["Alpha-1", "Beta-7", "Epsilon-11", "Nu-7", "Eta-10", "Tau-5"],
       "Административный Департамент": ["Assistant", "Manager", "Deputy Director", "Site Director", "Regional Director"],
-      "O5": Array.from({length:13}, (_,i)=>`O5-${i+1}`)
+      "Член Совета O5": Array.from({length:13}, (_,i)=>`O5-${i+1}`)
       // "The Administrator" и "Office of The Administrator" — без подклассов
     };
 
@@ -170,7 +170,7 @@
       "Служба Безопасности": "Должность:",
       "Мобильные Оперативные Группы": "Подразделение:",
       "Административный Департамент": "Должность:",
-      "O5": "Номер члена Совета O5:"
+      "Член Совета O5": "Номер члена Совета O5:"
     };
 
     let user = JSON.parse(localStorage.getItem("user") || "null");
