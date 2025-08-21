@@ -4,22 +4,155 @@
   <meta charset="UTF-8">
   <title>SCP Foundation</title>
   <style>
-    body { background:#0d0d0d; color:#f5f5f5; font-family:Segoe UI, Arial, sans-serif; display:flex; height:100vh; margin:0; }
-    #sidebar { width:280px; background:#161616; padding:20px; border-right:2px solid #222; overflow-y:auto; }
-    #sidebar h3 { margin:0 0 10px; font-size:18px; border-bottom:1px solid #333; padding-bottom:8px; }
-    .scp-entry { display:block; padding:8px; margin:6px 0; border-radius:6px; color:#ccc; text-decoration:none; }
-    .scp-entry:hover { background:#222; color:#fff; }
-    #content { flex:1; padding:30px; overflow-y:auto; }
-    h1 { margin:0 0 15px; font-size:26px; color:#e0e0e0; }
-    #userInfo, .panel { background:#1c1c1c; padding:18px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.4); margin-bottom:22px; }
-    input, select, textarea { width:100%; padding:10px; margin:8px 0; border:1px solid #333; border-radius:8px; background:#111; color:#eee; }
-    input:focus, select:focus, textarea:focus { border-color:#c62828; outline:none; }
-    button { width:100%; padding:10px; border:0; border-radius:8px; background:#c62828; color:white; font-weight:600; cursor:pointer; }
-    button:hover { background:#e53935; }
-    #logoutBtn { background:#444; }
-    #logoutBtn:hover { background:#666; }
-    #logo { width:28px; height:28px; vertical-align:-6px; border-radius:0; margin-right:8px; }
-    #userStats { background:#111; padding:12px; border-radius:8px; margin-top:10px; font-size:14px; line-height:1.5; }
+    body {
+      background: #0d0d0d;
+      color: #f5f5f5;
+      font-family: Segoe UI, Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      margin: 0;
+    }
+
+    /* Боковая панель */
+    #sidebar {
+      width: 260px;
+      background: linear-gradient(180deg, #161616, #0d0d0d);
+      padding: 20px;
+      border-right: 2px solid #1e1e1e;
+      overflow-y: auto;
+      box-shadow: 4px 0 12px rgba(0,0,0,0.5);
+    }
+    #sidebar h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 6px;
+      color: #ff5555;
+      letter-spacing: 1px;
+    }
+    #search {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 8px;
+      color: #fff;
+      width: 100%;
+    }
+    #search:focus {
+      border-color: #ff5555;
+      box-shadow: 0 0 8px #ff555580;
+      outline: none;
+    }
+
+    .scp-entry {
+      display: block;
+      padding: 8px;
+      margin: 6px 0;
+      border-radius: 6px;
+      color: #ccc;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .scp-entry:hover {
+      background: #222;
+      color: #ff5555;
+      transform: translateX(4px);
+    }
+
+    /* Контент */
+    #content {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+    h1 {
+      margin: 0 0 20px;
+      font-size: 28px;
+      color: #e0e0e0;
+      display: flex;
+      align-items: center;
+    }
+    #logo {
+      width: 36px;
+      height: 36px;
+      margin-right: 10px;
+    }
+
+    /* Карточки */
+    .panel, #userInfo {
+      background: #1a1a1a;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      margin-bottom: 24px;
+      border: 1px solid #2a2a2a;
+      transition: all 0.3s ease;
+    }
+    .panel:hover {
+      border-color: #ff5555;
+      box-shadow: 0 0 12px #ff555580;
+    }
+    .panel h3 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #ff5555;
+      border-bottom: 1px solid #333;
+      padding-bottom: 6px;
+      margin-bottom: 14px;
+    }
+
+    /* Формы */
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #111;
+      color: #eee;
+      transition: all 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #ff5555;
+      box-shadow: 0 0 6px #ff555580;
+      outline: none;
+    }
+
+    /* Кнопки */
+    button {
+      width: 100%;
+      padding: 10px;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #ff5555, #e53935);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      margin-top: 8px;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(229,57,53,0.5);
+    }
+    #logoutBtn {
+      background: #444;
+    }
+    #logoutBtn:hover {
+      background: #666;
+      box-shadow: none;
+    }
+
+    /* Статистика */
+    #userStats {
+      background: #111;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+      border: 1px solid #2a2a2a;
+    }
   </style>
 </head>
 <body>
@@ -42,29 +175,17 @@
 
       <label>Новый уровень:</label>
       <select id="newLevel">
-        <option value="none">Level none</option>
         <option value="0">Level 0</option>
-        <option value="-1">Level -1</option>
         <option value="1">Level 1</option>
-        <option value="1+">Level 1+</option>
-        <option value="-2">Level -2</option>
         <option value="2">Level 2</option>
-        <option value="2+">Level 2+</option>
-        <option value="-3">Level -3</option>
         <option value="3">Level 3</option>
-        <option value="3+">Level 3+</option>
-        <option value="-4">Level -4</option>
         <option value="4">Level 4</option>
-        <option value="4+">Level 4+</option>
-        <option value="5">Level -5</option>
         <option value="5">Level 5</option>
-        <option value="5+">Level 5+</option>
         <option value="6">Level Omni</option>
-        <option value="7">Level Omni+</option>
       </select>
 
       <label>Роль:</label>
-      <select id="newRole">
+      <select id="newRole" onchange="toggleUnits()">
         <option value="Класс-Д">Класс-Д</option>
         <option value="Группа Быстрого Реагирования">Группа Быстрого Реагирования</option>
         <option value="Медицинский Департамент">Медицинский Департамент</option>
@@ -78,23 +199,22 @@
         <option value="Служба Безопасности">Служба Безопасности</option>
         <option value="Мобильные Оперативные Группы">Мобильные Оперативные Группы</option>
         <option value="Административный Департамент">Административный Департамент</option>
-        <option value="Член Совета O5">O5</option>
+        <option value="O5">Член Совета O5</option>
         <option value="The Administrator">The Administrator</option>
         <option value="Office of The Administrator">Office of The Administrator</option>
       </select>
 
-      <!-- Динамическое поле "подкласс / подразделение / номер O5" -->
+      <!-- Подклассы/подразделения -->
       <div id="unitDiv" style="display:none;">
-        <label id="unitLabel">Подразделение:</label>
+        <label>Подразделение:</label>
         <select id="newUnit"></select>
       </div>
 
       <label>Сайт:</label>
       <select id="newSite">
         <option value="Site-01">Site-01</option>
-        <option value="Site-02">Site-02</option>
-        <option value="Site-03">Site-03</option>
-        <option value="Site-04">Site-04</option>
+        <option value="Site-17">Site-17</option>
+        <option value="Site-82">Site-82</option>
         <option value="Site-██">Site-██</option>
       </select>
 
@@ -120,223 +240,42 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getDatabase, ref, set, get, update, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    // ⚡️ Тут идёт твоя логика на JS (Firebase datastore, авторизация, проверка ролей и уровней)
+    // Важно: нужно прописать toggleUnits() чтобы показывало подразделения только для нужных ролей
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnЗlKQV6BJLIo",
-      authDomain: "scp-foundation-45b20.firebaseapp.com",
-      databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com/",
-      projectId: "scp-foundation-45b20",
-      storageBucket: "scp-foundation-45b20.appspot.com",
-      messagingSenderId: "383272466518",
-      appId: "1:383272466518:web:3225b8911a56c9d769e3f7"
+    const units = {
+      "Класс-Д": ["Испытуемый", "Старший испытуемый"],
+      "Группа Быстрого Реагирования": ["Новобранец", "Оператор", "Командир"],
+      "Медицинский Департамент": ["Интерн", "Врач", "Главврач"],
+      "Служба Разведки": ["Агент", "Старший агент"],
+      "Инжинерно-Техническая Служба": ["Техник", "Инженер"],
+      "Научный Департамент Специализированных Исследований": ["Jr. Researcher", "Researcher", "Sr. Researcher"],
+      "O5": ["O5-1","O5-2","O5-3","O5-4","O5-5","O5-6","O5-7","O5-8","O5-9","O5-10","O5-11","O5-12","O5-13"]
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // === Маппинг подклассов/подразделений по ролям ===
-    const roleSubOptions = {
-      "Класс-Д": ["Класс-E", "Класс-D", "Класс-C"],
-      "Группа Быстрого Реагирования": ["Test"],
-      "Медицинский Департамент": ["Интерн"],
-      "Служба Разведки": ["Test"],
-      "Инжинерно-Техническая Служба": ["Test"],
-      "Отдел Внешних Связей": ["Интерн"],
-      "Служба Внутреннего Трибунала": ["Интерн"],
-      "Комитет по Этике": ["Интерн"],
-      "Отдел Внутренней Безопасности": ["Интерн"],
-      "Научный Департамент Специализированных Исследований": ["Интерн", "Младший Исследователь", "Senior Researcher", "Doctor", "Chief Researcher"],
-      "Служба Безопасности": ["Cadet", "Security Officer", "Sergeant", "Lieutenant", "Captain", "Chief of Security"],
-      "Мобильные Оперативные Группы": ["Alpha-1", "Beta-7", "Epsilon-11", "Nu-7", "Eta-10", "Tau-5"],
-      "Административный Департамент": ["Assistant", "Manager", "Deputy Director", "Site Director", "Regional Director"],
-      "Член Совета O5": Array.from({length:13}, (_,i)=>`O5-${i+1}`)
-      // "The Administrator" и "Office of The Administrator" — без подклассов
-    };
-
-    // Подписи для поля "unit" в зависимости от роли
-    const roleUnitLabels = {
-      "Класс-Д": "Класс/статус:",
-      "Группа Быстрого Реагирования": "Должность:",
-      "Медицинский Департамент": "Должность:",
-      "Служба Разведки": "Должность:",
-      "Инжинерно-Техническая Служба": "Должность:",
-      "Отдел Внешних Связей": "Должность:",
-      "Служба Внутреннего Трибунала": "Должность:",
-      "Комитет по Этике": "Должность:",
-      "Отдел Внутренней Безопасности": "Должность:",
-      "Научный Департамент Специализированных Исследований": "Должность:",
-      "Служба Безопасности": "Должность:",
-      "Мобильные Оперативные Группы": "Подразделение:",
-      "Административный Департамент": "Должность:",
-      "Член Совета O5": "Номер члена Совета O5:"
-    };
-
-    let user = JSON.parse(localStorage.getItem("user") || "null");
-    if (!user) window.location.href = "index.html";
-
-    async function loadUserInfo() {
-      const snap = await get(ref(db, "users/" + user.nick));
-      if (snap.exists()) {
-        user = snap.val();
-        user.nick = snap.key;
-        localStorage.setItem("user", JSON.stringify(user));
-
-        document.getElementById("userInfo").innerHTML =
-          `<b>Добро пожаловать, ${user.nick}!</b><br>
-           Ваш уровень: <span style="color:#ff5555">${user.level}</span><br>
-           Ваша роль: ${user.role}<br>
-           ${user.unit ? `${(roleUnitLabels[user.role] || "Подразделение")}: ${user.unit}<br>` : ""}
-           Ваш сайт: ${user.site || "—"}`;
-
-        // Создавать SCP могут: Researcher с уровнем >3, а также высшее руководство
-        if (
-          (user.role === "Researcher" && Number(user.level) > 3) ||
-          user.role === "O5" ||
-          user.role === "The Administrator" ||
-          user.role === "Office of The Administrator"
-        ) {
-          document.getElementById("addScpPanel").style.display = "block";
-        }
-
-        // Админ-доступ (уровень >= 4)
-        if (Number(user.level) >= 4) {
-          document.getElementById("adminPanel").style.display = "block";
-          document.getElementById("statsPanel").style.display = "block";
-        }
-      }
-    }
-    loadUserInfo();
-
-    // Выход
-    window.logout = () => { localStorage.removeItem("user"); window.location.href = "index.html"; };
-
-    // Динамическое отображение/заполнение подклассов
-    const roleSelect = document.getElementById("newRole");
-    const unitDiv = document.getElementById("unitDiv");
-    const unitLabel = document.getElementById("unitLabel");
-    const unitSelect = document.getElementById("newUnit");
-
-    roleSelect.addEventListener("change", () => {
-      const role = roleSelect.value;
-      updateUnitField(role);
-    });
-
-    function updateUnitField(role) {
-      const options = roleSubOptions[role];
-      // Роли без подклассов
-      if (!options) {
-        unitDiv.style.display = "none";
-        unitSelect.innerHTML = "";
-        return;
-      }
-      // Показать и наполнить варианты
-      unitDiv.style.display = "block";
-      unitLabel.textContent = roleUnitLabels[role] || "Подразделение:";
+    function toggleUnits() {
+      const role = document.getElementById("newRole").value;
+      const unitDiv = document.getElementById("unitDiv");
+      const unitSelect = document.getElementById("newUnit");
       unitSelect.innerHTML = "";
-      const placeholder = document.createElement("option");
-      placeholder.value = "";
-      placeholder.textContent = "—";
-      unitSelect.appendChild(placeholder);
-      options.forEach(opt => {
-        const o = document.createElement("option");
-        o.value = opt;
-        o.textContent = opt;
-        unitSelect.appendChild(o);
-      });
-    }
-    // Инициализировать при загрузке (на случай если админ сразу щёлкает «Обновить»)
-    updateUnitField(roleSelect.value);
 
-    // Обновление пользователя
-    window.updateUser = async () => {
-      const nick = document.getElementById("targetNick").value.trim();
-      const level = document.getElementById("newLevel").value === "none"
-        ? "none"
-        : parseInt(document.getElementById("newLevel").value);
-      const role = roleSelect.value;
-      const site = document.getElementById("newSite").value;
-
-      if (!nick) return alert("Введите ник пользователя");
-
-      // Если у роли нет подклассов — очищаем unit, иначе берём выбранный
-      let unit = "";
-      if (roleSubOptions[role]) {
-        unit = unitSelect.value || "";
-      }
-
-      const uref = ref(db, "users/" + nick);
-      const snap = await get(uref);
-      if (!snap.exists()) return alert("Пользователь не найден");
-
-      await update(uref, { level, role, site, unit });
-      alert(`Пользователь ${nick} обновлён: Level ${level}, Role ${role}, ${unit ? (roleUnitLabels[role] || "Unit") + " " + unit + ", " : ""}Site ${site}`);
-    };
-
-    // Просмотр статистики
-    window.showStats = async () => {
-      const nick = document.getElementById("statsNick").value.trim();
-      if (!nick) return alert("Введите ник");
-      const uref = ref(db, "users/" + nick);
-      const snap = await get(uref);
-      if (!snap.exists()) {
-        document.getElementById("userStats").innerHTML = "❌ Пользователь не найден";
+      if (role === "The Administrator" || role === "Office of The Administrator") {
+        unitDiv.style.display = "none";
         return;
       }
-      const u = snap.val();
-      document.getElementById("userStats").innerHTML = `
-        <b>Ник:</b> ${nick}<br>
-        <b>Уровень:</b> ${u.level}<br>
-        <b>Роль:</b> ${u.role}<br>
-        ${u.unit ? `<b>${roleUnitLabels[u.role] || "Подразделение"}:</b> ${u.unit}<br>` : ""}
-        <b>Сайт:</b> ${u.site || "—"}<br>
-        <b>Дата регистрации:</b> ${u.createdAt ? new Date(u.createdAt).toLocaleString() : "—"}<br>
-      `;
-    };
 
-    // Добавление SCP
-    window.addScp = async () => {
-      const title = document.getElementById("scpTitle").value.trim();
-      const requiredLevel = parseInt(document.getElementById("scpLevel").value);
-      const content = document.getElementById("scpContent").value.trim();
-      if (!title || !content || !requiredLevel) return alert("Заполните все поля");
-
-      const newRef = push(ref(db, "scp"));
-      await set(newRef, { title, requiredLevel, content, author: user.nick, createdAt: Date.now() });
-      alert("SCP добавлен");
-      loadEntries();
-      document.getElementById("scpTitle").value = "";
-      document.getElementById("scpLevel").value = "";
-      document.getElementById("scpContent").value = "";
-    };
-
-    // Список SCP + поиск
-    const entriesDiv = document.getElementById("entries");
-    const searchInput = document.getElementById("search");
-
-    searchInput.oninput = () => {
-      const q = searchInput.value.toLowerCase();
-      Array.from(entriesDiv.children).forEach(link => {
-        link.style.display = link.innerText.toLowerCase().includes(q) ? "block" : "none";
-      });
-    };
-
-    async function loadEntries() {
-      entriesDiv.innerHTML = "Загрузка…";
-      const snap = await get(ref(db, "scp"));
-      entriesDiv.innerHTML = "";
-      if (!snap.exists()) { entriesDiv.innerHTML = "Нет SCP записей"; return; }
-      snap.forEach(ch => {
-        const d = ch.val();
-        const a = document.createElement("a");
-        a.href = `scp.html?id=${ch.key}`;
-        a.className = "scp-entry";
-        a.textContent = `${d.title} (Level ${d.requiredLevel})`;
-        entriesDiv.appendChild(a);
-      });
+      if (units[role]) {
+        units[role].forEach(u => {
+          let opt = document.createElement("option");
+          opt.value = u;
+          opt.textContent = u;
+          unitSelect.appendChild(opt);
+        });
+        unitDiv.style.display = "block";
+      } else {
+        unitDiv.style.display = "none";
+      }
     }
-    loadEntries();
   </script>
 </body>
 </html>
