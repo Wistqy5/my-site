@@ -3,150 +3,149 @@
 <head>
   <meta charset="UTF-8">
   <title>SCP Foundation Intranet</title>
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  body {
-  background: #0a0a0a;
-  color: #f0f0f0;
-  font-family: "Segoe UI", Arial, sans-serif;
-  display: flex;
-  height: 100vh;
-  margin: 0;
-}
-
-/* ==== Sidebar ==== */
-#sidebar {
-  width: 280px;
-  background: #121212;
-  padding: 20px;
-  border-right: 2px solid #1e1e1e;
-  overflow-y: auto;
-  box-shadow: 4px 0 12px rgba(0,0,0,0.5);
-}
-
-#sidebar h3 {
-  margin: 0 0 12px;
-  font-size: 18px;
-  font-weight: 600;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #2a2a2a;
-  color: #f5f5f5;
-}
-
-.scp-entry {
-  display: block;
-  padding: 10px 12px;
-  margin: 6px 0;
-  border-radius: 8px;
-  color: #ccc;
-  text-decoration: none;
-  transition: all 0.2s ease-in-out;
-}
-.scp-entry:hover {
-  background: #1f1f1f;
-  color: #fff;
-  transform: translateX(4px);
-}
-
-/* ==== Content ==== */
-#content {
-  flex: 1;
-  padding: 30px;
-  overflow-y: auto;
-}
-
-h1 {
-  margin: 0 0 20px;
-  font-size: 28px;
-  font-weight: 700;
-  color: #fafafa;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* ==== Cards / Panels ==== */
-#userInfo,
-.panel {
-  background: #181818;
-  padding: 20px;
-  border-radius: 14px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
-  margin-bottom: 24px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-#userInfo:hover,
-.panel:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.6);
-}
-
-/* ==== Form elements ==== */
-input,
-select,
-textarea {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0 14px;
-  border: 1px solid #2a2a2a;
-  border-radius: 10px;
-  background: #111;
-  color: #eee;
-  font-size: 14px;
-  transition: border 0.2s;
-}
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: #e53935;
-  outline: none;
-}
-
-/* ==== Buttons ==== */
-button {
-  width: 100%;
-  padding: 12px;
-  border: 0;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #c62828, #e53935);
-  color: white;
-  font-weight: 600;
-  font-size: 15px;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(229,57,53,0.5);
-}
-
-#logoutBtn {
-  background: linear-gradient(135deg, #444, #666);
-}
-#logoutBtn:hover {
-  box-shadow: 0 4px 12px rgba(160,160,160,0.3);
-}
-
-/* ==== Logo ==== */
-#logo {
-  width: 32px;
-  height: 32px;
-  vertical-align: middle;
-  border-radius: 4px;
-}
-
-/* ==== Stats ==== */
-#userStats {
-  background: #111;
-  padding: 14px;
-  border-radius: 10px;
-  margin-top: 12px;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #ddd;
-}
   
+  <style>
+  body {
+    background: #0a0a0a;
+    color: #f0f0f0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    display: flex;
+    height: 100vh;
+    margin: 0;
+  }
+
+  /* ==== Sidebar ==== */
+  #sidebar {
+    width: 280px;
+    background: #121212;
+    padding: 20px;
+    border-right: 2px solid #1e1e1e;
+    overflow-y: auto;
+    box-shadow: 4px 0 12px rgba(0,0,0,0.5);
+  }
+  #sidebar h3 {
+    margin: 0 0 12px;
+    font-size: 18px;
+    font-weight: 600;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2a2a2a;
+    color: #f5f5f5;
+  }
+  .scp-entry {
+    display: block;
+    padding: 10px 12px;
+    margin: 6px 0;
+    border-radius: 8px;
+    color: #ccc;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+  }
+  .scp-entry:hover {
+    background: #1f1f1f;
+    color: #fff;
+    transform: translateX(4px);
+  }
+
+  /* ==== Content ==== */
+  #content {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+  }
+  h1 {
+    margin: 0 0 20px;
+    font-size: 28px;
+    font-weight: 700;
+    color: #fafafa;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ==== Cards / Panels ==== */
+  #userInfo,
+  .panel {
+    background: #181818;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    margin-bottom: 24px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  #userInfo:hover,
+  .panel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.6);
+  }
+
+  /* ==== Form elements ==== */
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0 14px;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    background: #111;
+    color: #eee;
+    font-size: 14px;
+    transition: border 0.2s;
+  }
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: #e53935;
+    outline: none;
+  }
+
+  /* ==== Buttons ==== */
+  button {
+    width: 100%;
+    padding: 12px;
+    border: 0;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #c62828, #e53935);
+    color: white;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(229,57,53,0.5);
+  }
+  #logoutBtn {
+    background: linear-gradient(135deg, #444, #666);
+  }
+  #logoutBtn:hover {
+    box-shadow: 0 4px 12px rgba(160,160,160,0.3);
+  }
+
+  /* ==== Logo ==== */
+  #logo {
+    width: 32px;
+    height: 32px;
+    vertical-align: middle;
+    border-radius: 4px;
+  }
+
+  /* ==== Stats ==== */
+  #userStats {
+    background: #111;
+    padding: 14px;
+    border-radius: 10px;
+    margin-top: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #ddd;
+  }
+  </style>
 </head>
 <body>
   <!-- Sidebar -->
@@ -254,24 +253,37 @@ button:hover {
   }
 
   function setupPanels(){
-    // уровни
-    LEVELS.forEach(l=>{let o=document.createElement("option");o.value=l;o.text=l;document.getElementById("newLevel").appendChild(o);});
-    // роли
-    ROLES.forEach(r=>{let o=document.createElement("option");o.value=r;o.text=r;document.getElementById("newRole").appendChild(o);});
+    LEVELS.forEach(l=>{
+      let o=document.createElement("option");
+      o.value=l;o.text=l;
+      document.getElementById("newLevel").appendChild(o);
+    });
+    ROLES.forEach(r=>{
+      let o=document.createElement("option");
+      o.value=r;o.text=r;
+      document.getElementById("newRole").appendChild(o);
+    });
     document.getElementById("newRole").addEventListener("change",()=>{
       let role=document.getElementById("newRole").value;
       let unitDiv=document.getElementById("unitDiv");
       let unitSel=document.getElementById("newUnit");
       unitSel.innerHTML="";
       if(UNITS[role]){
-        UNITS[role].forEach(u=>{let o=document.createElement("option");o.value=u;o.text=u;unitSel.appendChild(o);});
+        UNITS[role].forEach(u=>{
+          let o=document.createElement("option");
+          o.value=u;o.text=u;
+          unitSel.appendChild(o);
+        });
         unitDiv.style.display="block";
       } else unitDiv.style.display="none";
     });
 
-    if(["6","7"].includes(currentUserData.level)) document.getElementById("adminPanel").style.display="block";
-    if(parseInt(currentUserData.level)>=4) document.getElementById("statsPanel").style.display="block";
-    if(["6","7"].includes(currentUserData.level)) document.getElementById("addScpPanel").style.display="block";
+    if(["6","7"].includes(currentUserData.level)) 
+      document.getElementById("adminPanel").style.display="block";
+    if(parseInt(currentUserData.level)>=4) 
+      document.getElementById("statsPanel").style.display="block";
+    if(["6","7"].includes(currentUserData.level)) 
+      document.getElementById("addScpPanel").style.display="block";
   }
 
   function renderEntries(){
@@ -312,7 +324,8 @@ button:hover {
           role:document.getElementById("newRole").value,
           site:document.getElementById("newSite").value
         };
-        if(UNITS[updates.role]) updates.unit=document.getElementById("newUnit").value;
+        if(UNITS[updates.role]) 
+          updates.unit=document.getElementById("newUnit").value;
         db.ref("users/"+u.key).update(updates);
         alert("Обновлено!");
       });
@@ -337,7 +350,10 @@ button:hover {
   }
 
   function logout(){auth.signOut();}
-  window.addScp=addScp;window.updateUser=updateUser;window.showStats=showStats;window.logout=logout;
+  window.addScp=addScp;
+  window.updateUser=updateUser;
+  window.showStats=showStats;
+  window.logout=logout;
 </script>
 </body>
 </html>
