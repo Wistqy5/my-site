@@ -38,8 +38,12 @@
       display:flex; flex-direction:column; align-items:center;
     }
     h1 {
-      margin:0 0 20px; font-size:28px; color:#f05454;
+      margin:0 0 8px; font-size:28px; color:#f05454;
       text-shadow:0 0 8px rgba(240,84,84,.6); text-align:center;
+    }
+    #clock {
+      margin:0 0 20px; font-size:14px; color:#bdbdbd;
+      letter-spacing:.3px;
     }
 
     /* Контейнеры с ограничением ширины */
@@ -96,7 +100,11 @@
 
   <!-- Контент -->
   <div id="content">
-    <h1><img id="logo" src="logo.png" alt="" style="width:28px;height:28px;vertical-align:-6px;margin-right:8px;">SCP Foundation</h1>
+    <h1>
+      <img id="logo" src="logo.png" alt="" style="width:28px;height:28px;vertical-align:-6px;margin-right:8px;">
+      SCP Foundation
+    </h1>
+    <div id="clock" class="limited">Официальное время (МСК): —</div>
 
     <div id="userInfo" class="limited"></div>
     <button id="logoutBtn" class="limited" onclick="logout()">Выйти</button>
@@ -166,9 +174,7 @@
       <!-- Чекбоксы -->
       <div style="margin-top:12px;">
         <label><input type="checkbox" id="isTrial"> Испытательный срок</label>
-        <label id="adminCheckboxWrapper" style="display:none; margin-top:8px;">
-          <input type="checkbox" id="isAdmin"> Дать доступ к админ-панели
-        </label>
+        <!-- чекбокс isAdmin удалён намеренно -->
       </div>
 
       <button onclick="updateUser()">Обновить</button>
@@ -246,7 +252,7 @@
       "Член Совета O5":"Номер члена Совета O5:"
     };
 
-    // Данные текущего пользователя (как у тебя было)
+    // Данные текущего пользователя
     let user = JSON.parse(localStorage.getItem("user") || "null");
     if (!user) window.location.href = "index.html";
 
@@ -266,16 +272,16 @@
          ${user.isTrial ? "Статус: <span style='color:#ffb74d'>Испытательный срок</span><br>" : ""}
          ${user.isAdmin ? "Доступ: <span style='color:#81c784'>Админ-панель</span>" : ""}`;
 
-      // Кто видит админку: уровень >=4 ИЛИ флаг isAdmin
+      // Админка — только если isAdmin === true
       if (user.isAdmin === true) {
         document.getElementById("adminPanel").style.display = "block";
         document.getElementById("statsPanel").style.display = "block";
       }
 
-      // Кому можно добавлять SCP (оставляю твою логику)
+      // Право добавлять SCP — для учёных (lvl>3) и руководства
       if (
-        (user.role === "Researcher" && Number(user.level) > 3) ||
-        user.role === "O5" ||
+        (user.role === "Научный Департамент Специализированных Исследований" && Number(user.level) > 3) ||
+        user.role === "Член Совета O5" ||
         user.role === "The Administrator" ||
         user.role === "Office of The Administrator"
       ) {
@@ -309,17 +315,7 @@
     }
     updateUnitField(roleSelect.value);
 
-    // Показ/скрытие чекбокса "Дать админ-панель" при уровне ≥6
-    const newLevelSel = document.getElementById("newLevel");
-    const adminWrapper = document.getElementById("adminCheckboxWrapper");
-    newLevelSel.addEventListener("change", () => {
-      const val = newLevelSel.value;
-      const numeric = isNaN(parseInt(val)) ? -999 : parseInt(val);
-      if (numeric >= 6) adminWrapper.style.display = "block";
-      else { adminWrapper.style.display = "none"; document.getElementById("isAdmin").checked = false; }
-    });
-
-    // ==== Обновление пользователя ====
+    // ==== Обновление пользователя (без возможности выдать isAdmin) ====
     window.updateUser = async () => {
       const nick = document.getElementById("targetNick").value.trim();
       const levelVal = document.getElementById("newLevel").value;
@@ -327,7 +323,6 @@
       const role = roleSelect.value;
       const site = document.getElementById("newSite").value;
       const isTrial = document.getElementById("isTrial").checked;
-      const isAdmin = document.getElementById("isAdmin").checked;
 
       if (!nick) return alert("Введите ник пользователя");
 
@@ -338,7 +333,8 @@
       const snap = await get(uref);
       if (!snap.exists()) return alert("Пользователь не найден");
 
-      await update(uref, { level, role, site, unit, isTrial, isAdmin });
+      // ВАЖНО: isAdmin НЕ передаём, чтобы UI не мог его менять
+      await update(uref, { level, role, site, unit, isTrial });
       alert(`Пользователь ${nick} обновлён`);
     };
 
@@ -406,6 +402,20 @@
       });
     }
     loadEntries();
+
+    // ==== Официальные часы по МСК ====
+    function updateClock() {
+      const now = new Date();
+      const options = {
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", second: "2-digit",
+        hour12: false, timeZone: "Europe/Moscow"
+      };
+      const formatted = new Intl.DateTimeFormat("ru-RU", options).format(now);
+      document.getElementById("clock").textContent = `Официальное время (МСК): ${formatted}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
   </script>
 </body>
 </html>
