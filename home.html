@@ -55,11 +55,11 @@
 
       <label>Роль:</label>
       <select id="newRole">
-        <option value="Class-D">Class-D</option>
+        <option value="Класс-Д">Класс-Д</option>
         <option value="Научный Департамент Специализированных Исследований">Научный Департамент Специализированных Исследований</option>
-        <option value="Security Department">Security Department</option>
-        <option value="Mobile Task Force">Mobile Task Force</option>
-        <option value="Administrative Department">Administrative Department</option>
+        <option value="Служба Безопасности">Служба Безопасности</option>
+        <option value="Мобильные Оперативные Группы">Мобильные Оперативные Группы</option>
+        <option value="Административный Департамент">Административный Департамент</option>
         <option value="O5">O5 Council</option>
         <option value="The Administrator">The Administrator</option>
         <option value="Office of The Administrator">Office of The Administrator</option>
@@ -73,10 +73,10 @@
 
       <label>Сайт:</label>
       <select id="newSite">
-        <option value="Site-17">Site-17</option>
-        <option value="Site-19">Site-19</option>
-        <option value="Site-82">Site-82</option>
-        <option value="Area-12">Area-12</option>
+        <option value="Site-01">Site-01</option>
+        <option value="Site-02">Site-02</option>
+        <option value="Site-03">Site-03</option>
+        <option value="Area-04">Area-04</option>
         <option value="Site-██">Site-██</option>
       </select>
 
@@ -120,22 +120,22 @@
 
     // === Маппинг подклассов/подразделений по ролям ===
     const roleSubOptions = {
-      "Class-D": ["D-Class", "Test Subject", "Probationary"],
+      "Класс-Д": ["Класс-Е", "Класс-Д"],
       "Научный Департамент Специализированных Исследований": ["Интерн", "Младший Исследователь", "Senior Researcher", "Doctor", "Chief Researcher"],
-      "Security Department": ["Cadet", "Security Officer", "Sergeant", "Lieutenant", "Captain", "Chief of Security"],
-      "Mobile Task Force": ["Alpha-1", "Beta-7", "Epsilon-11", "Nu-7", "Eta-10", "Tau-5"],
-      "Administrative Department": ["Assistant", "Manager", "Deputy Director", "Site Director", "Regional Director"],
+      "Служба Безопасности": ["Cadet", "Security Officer", "Sergeant", "Lieutenant", "Captain", "Chief of Security"],
+      "Мобильные Оперативные Группы": ["Alpha-1", "Beta-7", "Epsilon-11", "Nu-7", "Eta-10", "Tau-5"],
+      "Административный Департамент": ["Assistant", "Manager", "Deputy Director", "Site Director", "Regional Director"],
       "O5": Array.from({length:13}, (_,i)=>`O5-${i+1}`)
       // "The Administrator" и "Office of The Administrator" — без подклассов
     };
 
     // Подписи для поля "unit" в зависимости от роли
     const roleUnitLabels = {
-      "Class-D": "Класс/статус:",
+      "Класс-Д": "Класс/статус:",
       "Научный Департамент Специализированных Исследований": "Должность:",
-      "Security Department": "Должность:",
-      "Mobile Task Force": "Подразделение MTF:",
-      "Administrative Department": "Должность:",
+      "Служба Безопасности": "Должность:",
+      "Мобильные Оперативные Группы": "Подразделение:",
+      "Административный Департамент": "Должность:",
       "O5": "Номер члена Совета O5:"
     };
 
