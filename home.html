@@ -267,7 +267,7 @@
          ${user.isAdmin ? "Доступ: <span style='color:#81c784'>Админ-панель</span>" : ""}`;
 
       // Кто видит админку: уровень >=4 ИЛИ флаг isAdmin
-      if (Number(user.level) >= 4 || user.isAdmin === true) {
+      if (user.isAdmin === true) {
         document.getElementById("adminPanel").style.display = "block";
         document.getElementById("statsPanel").style.display = "block";
       }
