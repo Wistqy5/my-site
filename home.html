@@ -2,44 +2,176 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>SCP Foundation</title>
+  <title>SCP Foundation Intranet</title>
   <style>
-    body { background:#0d0d0d; color:#f5f5f5; font-family:Segoe UI, Arial, sans-serif; display:flex; height:100vh; margin:0; }
-    #sidebar { width:280px; background:#161616; padding:20px; border-right:2px solid #222; overflow-y:auto; }
-    #sidebar h3 { margin:0 0 10px; font-size:18px; border-bottom:1px solid #333; padding-bottom:8px; }
-    .scp-entry { display:block; padding:8px; margin:6px 0; border-radius:6px; color:#ccc; text-decoration:none; }
-    .scp-entry:hover { background:#222; color:#fff; }
-    #content { flex:1; padding:30px; overflow-y:auto; }
-    h1 { margin:0 0 15px; font-size:26px; color:#e0e0e0; }
-    #userInfo, .panel { background:#1c1c1c; padding:18px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.4); margin-bottom:22px; }
-    input, select, textarea { width:100%; padding:10px; margin:8px 0; border:1px solid #333; border-radius:8px; background:#111; color:#eee; }
-    input:focus, select:focus, textarea:focus { border-color:#c62828; outline:none; }
-    button { width:100%; padding:10px; border:0; border-radius:8px; background:#c62828; color:white; font-weight:600; cursor:pointer; }
-    button:hover { background:#e53935; }
-    #logoutBtn { background:#444; }
-    #logoutBtn:hover { background:#666; }
-    #logo { width:28px; height:28px; vertical-align:-6px; border-radius:0; margin-right:8px; }
-    #userStats { background:#111; padding:12px; border-radius:8px; margin-top:10px; font-size:14px; line-height:1.5; }
+    body {
+      background:#0a0a0a;
+      color:#eaeaea;
+      font-family:"Consolas","Courier New",monospace;
+      display:flex;
+      height:100vh;
+      margin:0;
+    }
+
+    /* Sidebar */
+    #sidebar {
+      width:280px;
+      background:#111;
+      padding:20px;
+      border-right:3px solid #c62828;
+      overflow-y:auto;
+    }
+    #sidebar h3 {
+      margin:0 0 12px;
+      font-size:18px;
+      color:#c62828;
+      text-transform:uppercase;
+      border-bottom:1px solid #c62828;
+      padding-bottom:8px;
+    }
+    .scp-entry {
+      display:block;
+      padding:8px;
+      margin:6px 0;
+      border-radius:4px;
+      background:#1a1a1a;
+      border:1px solid #333;
+      color:#ccc;
+      text-decoration:none;
+      transition:all .2s;
+    }
+    .scp-entry small {
+      display:block;
+      font-size:12px;
+      color:#999;
+      margin-top:2px;
+    }
+    .scp-entry:hover {
+      background:#c62828;
+      color:#fff;
+      border-color:#c62828;
+    }
+
+    /* Main */
+    #content {
+      flex:1;
+      padding:30px;
+      overflow-y:auto;
+    }
+    h1 {
+      margin:0 0 20px;
+      font-size:26px;
+      color:#c62828;
+      text-transform:uppercase;
+      border-bottom:2px solid #c62828;
+      padding-bottom:10px;
+      letter-spacing:2px;
+    }
+    #logo {
+      width:36px;
+      height:36px;
+      vertical-align:-8px;
+      margin-right:10px;
+    }
+
+    /* Panels */
+    #userInfo, .panel {
+      background:#1b1b1b;
+      padding:20px;
+      border:1px solid #333;
+      border-radius:6px;
+      box-shadow:0 0 12px rgba(0,0,0,.6);
+      margin-bottom:25px;
+    }
+    .panel h3 {
+      margin:0 0 12px;
+      font-size:16px;
+      color:#c62828;
+      text-transform:uppercase;
+      border-bottom:1px dashed #444;
+      padding-bottom:6px;
+    }
+
+    /* Inputs */
+    input, select, textarea {
+      width:100%;
+      padding:10px;
+      margin:8px 0 14px;
+      border:1px solid #444;
+      border-radius:4px;
+      background:#0f0f0f;
+      color:#eaeaea;
+      font-family:"Consolas","Courier New",monospace;
+      transition:all .2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color:#c62828;
+      outline:none;
+      background:#141414;
+    }
+
+    /* Buttons */
+    button {
+      width:100%;
+      padding:10px;
+      border:0;
+      border-radius:4px;
+      background:#c62828;
+      color:white;
+      font-weight:600;
+      cursor:pointer;
+      font-family:"Consolas","Courier New",monospace;
+      text-transform:uppercase;
+      letter-spacing:1px;
+      transition:all .2s;
+    }
+    button:hover { background:#b71c1c; }
+    #logoutBtn { background:#333; }
+    #logoutBtn:hover { background:#444; }
+
+    /* Stats panel */
+    #userStats {
+      background:#111;
+      padding:15px;
+      border-radius:4px;
+      border:1px solid #333;
+      margin-top:12px;
+      font-size:14px;
+      line-height:1.5;
+      white-space:pre-line;
+    }
+
+    /* Date Tag */
+    .date-tag {
+      display:inline-block;
+      font-size:12px;
+      color:#c62828;
+      margin-top:4px;
+    }
+
+    /* Scroll */
+    ::-webkit-scrollbar { width:8px; }
+    ::-webkit-scrollbar-track { background:#111; }
+    ::-webkit-scrollbar-thumb { background:#333; border-radius:4px; }
+    ::-webkit-scrollbar-thumb:hover { background:#c62828; }
   </style>
 </head>
 <body>
   <div id="sidebar">
-    <h3>Поиск SCP</h3>
+    <h3>SCP Files</h3>
     <input type="text" id="search" placeholder="Поиск...">
     <div id="entries">Нет SCP записей</div>
   </div>
 
   <div id="content">
-    <h1><img id="logo" src="logo.png" alt="">SCP Foundation</h1>
+    <h1><img id="logo" src="logo.png" alt="">Secure Contain Protect</h1>
 
     <div id="userInfo"></div>
-    <button id="logoutBtn" onclick="logout()">Выйти</button>
+    <button id="logoutBtn" onclick="logout()">Выход</button>
 
-    <!-- Админ-панель -->
     <div id="adminPanel" class="panel" style="display:none;">
       <h3>Административная панель</h3>
       <input type="text" id="targetNick" placeholder="Ник пользователя">
-
       <label>Новый уровень:</label>
       <select id="newLevel">
         <option value="none">Level none</option>
@@ -52,9 +184,8 @@
         <option value="6">Level Omni</option>
         <option value="7">Level Omni+</option>
       </select>
-
       <label>Роль:</label>
-      <select id="newRole" onchange="toggleSubroles()">
+      <select id="newRole">
         <option value="Class-D">Class-D</option>
         <option value="Researcher">Researcher</option>
         <option value="Security Department">Security Department</option>
@@ -64,32 +195,16 @@
         <option value="The Administrator">The Administrator</option>
         <option value="Office of The Administrator">Office of The Administrator</option>
       </select>
-
-      <!-- Под-роли -->
-      <div id="subroleDiv" style="display:none;">
-        <label>Под-класс:</label>
-        <select id="newSubrole"></select>
-      </div>
-
       <label>Сайт:</label>
       <select id="newSite">
         <option value="Site-01">Site-01</option>
-        <option value="Site-02">Site-02</option>
-        <option value="Site-03">Site-03</option>
+        <option value="Site-17">Site-17</option>
+        <option value="Site-82">Site-82</option>
         <option value="Site-██">Site-██</option>
       </select>
       <button onclick="updateUser()">Обновить</button>
     </div>
 
-    <!-- Просмотр статистики -->
-    <div id="statsPanel" class="panel" style="display:none;">
-      <h3>Просмотр статистики пользователя</h3>
-      <input type="text" id="statsNick" placeholder="Ник пользователя">
-      <button onclick="showStats()">Показать статистику</button>
-      <div id="userStats"></div>
-    </div>
-
-    <!-- Добавление SCP -->
     <div id="addScpPanel" class="panel" style="display:none;">
       <h3>Добавить SCP</h3>
       <input type="text" id="scpTitle" placeholder="Название SCP">
@@ -99,153 +214,40 @@
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getDatabase, ref, set, get, update, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+<script>
+  function getCurrentDate() {
+    const d = new Date();
+    return `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()} | ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+  }
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyA7mvVHeOg48A8HZknsdidnZlKQV6BJLIo",
-      authDomain: "scp-foundation-45b20.firebaseapp.com",
-      databaseURL: "https://scp-foundation-45b20-default-rtdb.firebaseio.com/",
-      projectId: "scp-foundation-45b20",
-      storageBucket: "scp-foundation-45b20.appspot.com",
-      messagingSenderId: "383272466518",
-      appId: "1:383272466518:web:3225b8911a56c9d769e3f7"
-    };
+  function addScp() {
+    let title = document.getElementById("scpTitle").value.trim();
+    let level = document.getElementById("scpLevel").value.trim();
+    let content = document.getElementById("scpContent").value.trim();
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    let user = JSON.parse(localStorage.getItem("user") || "null");
-    if (!user) window.location.href = "index.html";
-
-    // Подроли
-    const subroles = {
-      "Researcher": ["Jr. Researcher", "Researcher", "Sr. Researcher", "Dr.", "Professor"],
-      "Security Department": ["Cadet", "Guard", "Sergeant", "Captain", "Major"],
-      "Mobile Task Force": ["Private", "Corporal", "Sergeant", "Lieutenant", "Commander"],
-      "Administrative Department": ["Assistant", "Manager", "Director"],
-      "O5": ["O5-1","O5-2","O5-3","O5-4","O5-5","O5-6","O5-7","O5-8","O5-9","O5-10","O5-11","O5-12","O5-13"]
-    };
-
-    function toggleSubroles() {
-      const role = document.getElementById("newRole").value;
-      const subDiv = document.getElementById("subroleDiv");
-      const subSelect = document.getElementById("newSubrole");
-
-      if (subroles[role]) {
-        subDiv.style.display = "block";
-        subSelect.innerHTML = "";
-        subroles[role].forEach(r => {
-          const opt = document.createElement("option");
-          opt.value = r;
-          opt.textContent = r;
-          subSelect.appendChild(opt);
-        });
-      } else {
-        subDiv.style.display = "none";
-        subSelect.innerHTML = "";
-      }
+    if (!title || !level || !content) {
+      alert("Заполните все поля!");
+      return;
     }
-    window.toggleSubroles = toggleSubroles;
 
-    // Загрузка информации о пользователе
-    async function loadUserInfo() {
-      const snap = await get(ref(db, "users/" + user.nick));
-      if (snap.exists()) {
-        user = snap.val();
-        user.nick = snap.key;
-        localStorage.setItem("user", JSON.stringify(user));
+    let date = getCurrentDate();
+    let entry = document.createElement("div");
+    entry.className = "scp-entry";
+    entry.innerHTML = `<strong>${title}</strong> (Ур.${level}) 
+                       <small class="date-tag">[${date}]</small>`;
 
-        document.getElementById("userInfo").innerHTML =
-          `<b>Добро пожаловать, ${user.nick}!</b><br>
-           Уровень: <span style="color:#ff5555">${user.level}</span><br>
-           Роль: ${user.role}${user.subrole ? " ("+user.subrole+")" : ""}<br>
-           Сайт: ${user.site || "—"}`;
+    document.getElementById("entries").appendChild(entry);
 
-        // доступы
-        if ((user.role === "Researcher" && user.level > 3) || user.role === "O5" || user.role === "The Administrator" || user.role === "Office of The Administrator") {
-          document.getElementById("addScpPanel").style.display = "block";
-        }
-        if (Number(user.level) >= 4) {
-          document.getElementById("adminPanel").style.display = "block";
-          document.getElementById("statsPanel").style.display = "block";
-        }
-      }
-    }
-    loadUserInfo();
+    // Очистка
+    document.getElementById("scpTitle").value = "";
+    document.getElementById("scpLevel").value = "";
+    document.getElementById("scpContent").value = "";
+  }
 
-    window.logout = () => { localStorage.removeItem("user"); window.location.href = "index.html"; };
-
-    window.updateUser = async () => {
-      const nick = document.getElementById("targetNick").value.trim();
-      const level = parseInt(document.getElementById("newLevel").value);
-      const role = document.getElementById("newRole").value;
-      const site = document.getElementById("newSite").value;
-      const subrole = document.getElementById("newSubrole").value || null;
-
-      if (!nick) return alert("Введите ник пользователя");
-      const uref = ref(db, "users/" + nick);
-      const snap = await get(uref);
-      if (!snap.exists()) return alert("Пользователь не найден");
-      await update(uref, { level, role, site, subrole });
-      alert(`Пользователь ${nick} обновлён`);
-    };
-
-    window.showStats = async () => {
-      const nick = document.getElementById("statsNick").value.trim();
-      if (!nick) return alert("Введите ник");
-      const uref = ref(db, "users/" + nick);
-      const snap = await get(uref);
-      if (!snap.exists()) return document.getElementById("userStats").innerHTML = "❌ Пользователь не найден";
-      const u = snap.val();
-      document.getElementById("userStats").innerHTML = `
-        <b>Ник:</b> ${nick}<br>
-        <b>Уровень:</b> ${u.level}<br>
-        <b>Роль:</b> ${u.role}${u.subrole ? " ("+u.subrole+")" : ""}<br>
-        <b>Сайт:</b> ${u.site || "—"}<br>
-        <b>Дата регистрации:</b> ${u.createdAt ? new Date(u.createdAt).toLocaleString() : "—"}<br>
-      `;
-    };
-
-    window.addScp = async () => {
-      const title = document.getElementById("scpTitle").value.trim();
-      const requiredLevel = parseInt(document.getElementById("scpLevel").value);
-      const content = document.getElementById("scpContent").value.trim();
-      if (!title || !content || !requiredLevel) return alert("Заполните все поля");
-
-      const newRef = push(ref(db, "scp"));
-      await set(newRef, { title, requiredLevel, content, author: user.nick, createdAt: Date.now() });
-      alert("SCP добавлен");
-      loadEntries();
-    };
-
-    // Загрузка SCP
-    const entriesDiv = document.getElementById("entries");
-    const searchInput = document.getElementById("search");
-
-    searchInput.oninput = () => {
-      const q = searchInput.value.toLowerCase();
-      Array.from(entriesDiv.children).forEach(link => {
-        link.style.display = link.innerText.toLowerCase().includes(q) ? "block" : "none";
-      });
-    };
-
-    async function loadEntries() {
-      entriesDiv.innerHTML = "Загрузка…";
-      const snap = await get(ref(db, "scp"));
-      entriesDiv.innerHTML = "";
-      if (!snap.exists()) return entriesDiv.innerHTML = "Нет SCP записей";
-      snap.forEach(ch => {
-        const d = ch.val();
-        const a = document.createElement("a");
-        a.href = `scp.html?id=${ch.key}`;
-        a.className = "scp-entry";
-        a.textContent = `${d.title} (Level ${d.requiredLevel})`;
-        entriesDiv.appendChild(a);
-      });
-    }
-    loadEntries();
-  </script>
+  function logout() {
+    alert("Вы вышли из системы");
+    window.location.href = "index.html";
+  }
+</script>
 </body>
 </html>
