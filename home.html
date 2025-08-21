@@ -65,6 +65,7 @@
       width:100%; padding:12px; margin:10px 0; border:1px solid #333; border-radius:10px;
       background:#111; color:#eee; transition:border-color .3s ease, box-shadow .3s ease;
     }
+    textarea { min-height:140px; resize:vertical; }
     input:focus, select:focus, textarea:focus { border-color:#f05454; box-shadow:0 0 8px rgba(240,84,84,.6); outline:none; }
 
     /* ==== BUTTONS ==== */
@@ -83,10 +84,23 @@
     /* Статистика */
     #userStats { background:#111; padding:14px; border-radius:10px; margin-top:12px; font-size:14px; line-height:1.6; }
 
+    /* ==== TABS ==== */
+    .tabs { display:none; width:100%; max-width:900px; margin-bottom:12px; gap:10px; }
+    .tabs .tab-btn {
+      background:#262626; border:1px solid #333; color:#ddd; padding:10px 14px;
+      border-radius:10px; cursor:pointer; transition:all .2s ease; flex:0 0 auto;
+    }
+    .tabs .tab-btn:hover { transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,0,0,.3); }
+    .tabs .tab-btn.active { background:#f05454; border-color:#f05454; color:#fff; }
+
+    .tabcontent { display:none; }
+    .tabcontent.active { display:block; }
+
     /* ==== ADAPTIVE ==== */
     @media (max-width: 768px) {
       #sidebar { width: 200px; }
-      #userInfo, .panel, #logoutBtn { max-width: 95%; }
+      #userInfo, .panel, #logoutBtn, .tabs { max-width: 95%; }
+      .tabs { flex-wrap:wrap; }
     }
   </style>
 </head>
@@ -109,8 +123,11 @@
     <div id="userInfo" class="limited"></div>
     <button id="logoutBtn" class="limited" onclick="logout()">Выйти</button>
 
+    <!-- Кнопки вкладок -->
+    <div id="tabs" class="tabs limited"></div>
+
     <!-- Админ-панель -->
-    <div id="adminPanel" class="panel" style="display:none;">
+    <div id="adminPanel" class="panel tabcontent" style="display:none;">
       <h3>Административная панель</h3>
       <input type="text" id="targetNick" placeholder="Ник пользователя">
 
@@ -174,22 +191,22 @@
       <!-- Чекбоксы -->
       <div style="margin-top:12px;">
         <label><input type="checkbox" id="isTrial"> Испытательный срок</label>
-        <!-- чекбокс isAdmin удалён намеренно -->
+        <!-- чекбокс isAdmin удалён по требованиям -->
       </div>
 
       <button onclick="updateUser()">Обновить</button>
     </div>
 
     <!-- Просмотр статистики -->
-    <div id="statsPanel" class="panel" style="display:none;">
+    <div id="statsPanel" class="panel tabcontent" style="display:none;">
       <h3>Просмотр статистики пользователя</h3>
       <input type="text" id="statsNick" placeholder="Ник пользователя">
       <button onclick="showStats()">Показать статистику</button>
       <div id="userStats"></div>
     </div>
 
-    <!-- Добавление SCP (показывается по условиям) -->
-    <div id="addScpPanel" class="panel" style="display:none;">
+    <!-- Добавление SCP -->
+    <div id="addScpPanel" class="panel tabcontent" style="display:none;">
       <h3>Добавить SCP</h3>
       <input type="text" id="scpTitle" placeholder="Название SCP">
       <input type="number" id="scpLevel" placeholder="Требуемый уровень">
@@ -252,10 +269,60 @@
       "Член Совета O5":"Номер члена Совета O5:"
     };
 
-    // Данные текущего пользователя
+    // ======= Авторизация пользователя из LocalStorage =======
     let user = JSON.parse(localStorage.getItem("user") || "null");
     if (!user) window.location.href = "index.html";
 
+    // ======= Вкладки =======
+    function clearTabs() {
+      const tabs = document.getElementById("tabs");
+      tabs.innerHTML = "";
+      tabs.style.display = "none";
+      document.querySelectorAll(".tabcontent").forEach(el => {
+        el.classList.remove("active");
+        el.style.display = "none";
+      });
+      document.querySelectorAll(".tabs .tab-btn").forEach(btn => btn.classList.remove("active"));
+    }
+
+    function addTab(label, targetId) {
+      const tabs = document.getElementById("tabs");
+      const btn = document.createElement("button");
+      btn.className = "tab-btn";
+      btn.textContent = label;
+      btn.addEventListener("click", () => openTab(targetId, btn));
+      tabs.appendChild(btn);
+      tabs.style.display = "flex";
+      return btn;
+    }
+
+    function openTab(targetId, btnEl) {
+      document.querySelectorAll(".tabcontent").forEach(el => {
+        el.classList.remove("active");
+        el.style.display = "none";
+      });
+      document.querySelectorAll(".tabs .tab-btn").forEach(b => b.classList.remove("active"));
+
+      const tgt = document.getElementById(targetId);
+      if (tgt) { tgt.classList.add("active"); tgt.style.display = "block"; }
+      if (btnEl) btnEl.classList.add("active");
+    }
+
+    // ======= Часы МСК =======
+    function updateClock() {
+      const now = new Date();
+      const options = {
+        year:"numeric", month:"2-digit", day:"2-digit",
+        hour:"2-digit", minute:"2-digit", second:"2-digit",
+        hour12:false, timeZone:"Europe/Moscow"
+      };
+      const formatted = new Intl.DateTimeFormat("ru-RU", options).format(now);
+      document.getElementById("clock").textContent = `Официальное время (МСК): ${formatted}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // ======= Загрузка профиля и настройка видимости =======
     async function loadUserInfo() {
       const snap = await get(ref(db, "users/" + user.nick));
       if (!snap.exists()) return;
@@ -272,20 +339,41 @@
          ${user.isTrial ? "Статус: <span style='color:#ffb74d'>Испытательный срок</span><br>" : ""}
          ${user.isAdmin ? "Доступ: <span style='color:#81c784'>Админ-панель</span>" : ""}`;
 
-      // Админка — только если isAdmin === true
+      // Восстанавливаем панели/вкладки по правам
+      clearTabs();
+      const buttons = [];
+
+      // Админка и статистика — только если isAdmin === true
       if (user.isAdmin === true) {
         document.getElementById("adminPanel").style.display = "block";
         document.getElementById("statsPanel").style.display = "block";
+        buttons.push(addTab("Админка", "adminPanel"));
+        buttons.push(addTab("Статистика", "statsPanel"));
+      } else {
+        // На всякий случай скрыть
+        document.getElementById("adminPanel").style.display = "none";
+        document.getElementById("statsPanel").style.display = "none";
       }
 
-      // Право добавлять SCP — для учёных (lvl>3) и руководства
-      if (
+      // Добавление SCP — для учёных (lvl > 3) и руководства
+      const canAddScp =
         (user.role === "Научный Департамент Специализированных Исследований" && Number(user.level) > 3) ||
         user.role === "Член Совета O5" ||
         user.role === "The Administrator" ||
-        user.role === "Office of The Administrator"
-      ) {
+        user.role === "Office of The Administrator";
+
+      if (canAddScp) {
         document.getElementById("addScpPanel").style.display = "block";
+        buttons.push(addTab("Добавить SCP", "addScpPanel"));
+      } else {
+        document.getElementById("addScpPanel").style.display = "none";
+      }
+
+      // Если есть хотя бы одна вкладка — открыть первую
+      if (buttons.length > 0) {
+        openTab(buttons[0].textContent === "Админка" ? "adminPanel"
+                : buttons[0].textContent === "Статистика" ? "statsPanel"
+                : "addScpPanel", buttons[0]);
       }
     }
     loadUserInfo();
@@ -315,7 +403,7 @@
     }
     updateUnitField(roleSelect.value);
 
-    // ==== Обновление пользователя (без возможности выдать isAdmin) ====
+    // ==== Обновление пользователя (без isAdmin) ====
     window.updateUser = async () => {
       const nick = document.getElementById("targetNick").value.trim();
       const levelVal = document.getElementById("newLevel").value;
@@ -333,7 +421,7 @@
       const snap = await get(uref);
       if (!snap.exists()) return alert("Пользователь не найден");
 
-      // ВАЖНО: isAdmin НЕ передаём, чтобы UI не мог его менять
+      // isAdmin не трогаем
       await update(uref, { level, role, site, unit, isTrial });
       alert(`Пользователь ${nick} обновлён`);
     };
@@ -402,20 +490,6 @@
       });
     }
     loadEntries();
-
-    // ==== Официальные часы по МСК ====
-    function updateClock() {
-      const now = new Date();
-      const options = {
-        year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit", second: "2-digit",
-        hour12: false, timeZone: "Europe/Moscow"
-      };
-      const formatted = new Intl.DateTimeFormat("ru-RU", options).format(now);
-      document.getElementById("clock").textContent = `Официальное время (МСК): ${formatted}`;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
   </script>
 </body>
 </html>
