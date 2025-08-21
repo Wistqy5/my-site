@@ -55,6 +55,11 @@
     padding: 30px;
     overflow-y: auto;
     background: radial-gradient(circle at top left, #121212, #0d0d0d);
+
+    /* центрирование */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   h1 {
@@ -62,6 +67,7 @@
     font-size: 28px;
     color: #f05454;
     text-shadow: 0 0 8px rgba(240, 84, 84, 0.6);
+    text-align: center;
   }
 
   /* ==== PANELS ==== */
@@ -72,6 +78,10 @@
     box-shadow: 0 6px 16px rgba(0,0,0,.5);
     margin-bottom: 24px;
     transition: all 0.3s ease;
+
+    /* 🔽 ограничение ширины */
+    max-width: 900px;
+    width: 100%;
   }
 
   #userInfo:hover, .panel:hover {
@@ -141,7 +151,19 @@
     line-height: 1.6;
     box-shadow: inset 0 0 8px rgba(255,255,255,0.05);
   }
+
+  /* ==== ADAPTIVE ==== */
+  @media (max-width: 768px) {
+    #sidebar {
+      width: 200px;
+    }
+
+    #userInfo, .panel {
+      max-width: 95%;
+    }
+  }
 </style>
+
 
 </head>
 <body>
